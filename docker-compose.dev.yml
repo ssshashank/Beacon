@@ -1,0 +1,16 @@
+services:
+  beacon:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: beacon.dev
+    container_name: beacon_dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./src:/app/src
+      - ./Cargo.toml:/app/Cargo.toml
+      - ./Cargo.lock:/app/Cargo.lock
+    env_file:
+      - .env.dev

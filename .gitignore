@@ -1,15 +1,16 @@
 # Dot file
-/.vscode
-/.direnv
-/.idea
-/.runtime
+.vscode
+.direnv
+.idea
+.runtime
+.claude
 
 # Build
 /target
 
 # Environment
-/.env
-/.env.dev
+.env
+.env.dev
 
 # OS & Temp
 .DS_Store

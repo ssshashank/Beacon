@@ -5,8 +5,11 @@ edition = "2024"
 
 [dependencies]
 axum = { version = "0.8.9", features = ["macros"] }
+futures-util = "0.3"
 os = "0.1.0"
+reqwest = { version = "0.13.4", features = ["json", "stream"] }
 serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
 tokio = { version = "1.53.1", features = ["full"] }
 tokio-stream = { version = "0.1.19", features = ["sync"] }
 tokio-util = "0.7.19"

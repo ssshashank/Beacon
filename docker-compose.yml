@@ -1,0 +1,14 @@
+services:
+  beacon:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: beacon.latest
+    container_name: beacon
+    ports:
+      - "8000:8000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    env_file:
+      - env
+    restart: unless-stopped
