@@ -9,8 +9,7 @@ services:
       - "8000:8000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./src:/app/src
+      - ./apps/server:/app/apps/server
       - ./Cargo.toml:/app/Cargo.toml
-      - ./Cargo.lock:/app/Cargo.lock
     env_file:
       - .env.dev

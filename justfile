@@ -1,22 +1,32 @@
 # Standard Tasks (Single execution / CI)
 
 run:
-    cargo run --bin beacon
+    cargo run -p beacon
 
 build:
-    cargo build
+    cargo build -p beacon
 
 check:
-    cargo check
+    cargo check -p beacon
 
 clean:
     cargo clean
 
 test:
-    cargo test
+    cargo test -p beacon
 
 add-pkg crate feature="":
-    cargo add {{crate}} {{ if feature != "" { "--features " + feature } else { "" } }}
+    cargo add {{crate}} -p beacon {{ if feature != "" { "--features " + feature } else { "" } }}
+
+# Web (SolidJS)
+web-install:
+    bun install
+
+web-dev:
+    cd apps/web && bun run dev
+
+web-build:
+    cd apps/web && bun run build
 
 # Compose run
 compose-up-dev:

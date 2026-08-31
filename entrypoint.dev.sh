@@ -18,4 +18,4 @@ fi
  
 echo "Docker socket found. Starting cargo..."
  
-exec cargo run --bin beacon
+exec cargo run -p beacon
