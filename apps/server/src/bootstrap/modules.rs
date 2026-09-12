@@ -1,6 +1,7 @@
 use crate::modules::{
     containers::{controller::ContainerController, service::ContainerService},
     events::{controller::EventController, services::EventService},
+    images::{controller::ImageController, services::ImageService},
 };
 use reqwest::Client;
 use std::sync::Arc;
@@ -9,16 +10,20 @@ use std::sync::Arc;
 pub struct Modules {
     pub containers: Arc<ContainerController>,
     pub events: Arc<EventController>,
+    pub images: Arc<ImageController>,
 }
 
 pub fn init_modules(docker_client: Client) -> Modules {
     let container_service = ContainerService::new(docker_client.clone());
     let container_controller = Arc::new(ContainerController::new(container_service));
-    let event_service = EventService::new(docker_client);
+    let event_service = EventService::new(docker_client.clone());
     let event_controller = Arc::new(EventController::new(event_service));
+    let image_service = ImageService::new(docker_client);
+    let image_controller = Arc::new(ImageController::new(image_service));
 
     Modules {
         containers: container_controller,
         events: event_controller,
+        images: image_controller,
     }
 }

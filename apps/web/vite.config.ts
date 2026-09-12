@@ -1,6 +1,8 @@
 import { fileRoutes } from 'filesystem-routing/vite';
 import { defineConfig } from 'vitest/config';
 import solid from '@solidjs/vite-plugin';
+import tailwindcss from '@tailwindcss/vite';
+import path from "node:path";
 
 export default defineConfig({
   // Turnkey client mode: no index.html and no mount file — the plugin
@@ -12,6 +14,7 @@ export default defineConfig({
     // modules the fileRoutes plugin emits (their ids end in a query string).
     solid({ start: true, extensions: ['.jsx', '.tsx'], diagnostics: true }), // add `ssr: true` for streaming SSR
     fileRoutes({ types: true }),
+    tailwindcss()
   ],
   server: {
     port: 3000,
@@ -29,4 +32,9 @@ export default defineConfig({
     // Keep images as asset files instead of inlining them into the JS bundle.
     assetsInlineLimit: 0,
   },
+  resolve: {
+    alias: {
+      "~": path.resolve(__dirname, "./src"),
+    }
+  }
 });

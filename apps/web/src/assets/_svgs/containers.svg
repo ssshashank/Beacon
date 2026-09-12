@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Cyan glow & cyber lighting -->
+    <linearGradient id="boxTopGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+    <linearGradient id="boxFrontGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#181922" />
+      <stop offset="100%" stop-color="#0e0f14" />
+    </linearGradient>
+    <linearGradient id="boxSideGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1f202c" />
+      <stop offset="100%" stop-color="#13141a" />
+    </linearGradient>
+    <linearGradient id="cyanStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0ea5e9" />
+    </linearGradient>
+    <filter id="cyanGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Solid Background: #0A0A0B -->
+  <rect width="512" height="512" fill="#0A0A0B" />
+
+  <!-- Background Cyber Tech Grid subtle guide lines -->
+  <g opacity="0.06" stroke="#38bdf8" stroke-width="1.5">
+    <line x1="96" y1="32" x2="96" y2="480" stroke-dasharray="6,6" />
+    <line x1="256" y1="32" x2="256" y2="480" stroke-dasharray="6,6" />
+    <line x1="416" y1="32" x2="416" y2="480" stroke-dasharray="6,6" />
+    <line x1="32" y1="128" x2="480" y2="128" stroke-dasharray="6,6" />
+    <line x1="32" y1="256" x2="480" y2="256" stroke-dasharray="6,6" />
+    <line x1="32" y1="384" x2="480" y2="384" stroke-dasharray="6,6" />
+  </g>
+
+  <!-- CONTAINERS STACK / LIST ICON (Modular stacked multi-container cluster) -->
+  <g id="containers-list-group" transform="translate(0, 15)">
+
+    <!-- Top Floating Mini Container Indicator (Registry / Orchestration ping) -->
+    <g transform="translate(256, 92)" filter="url(#cyanGlow)">
+      <polygon points="0,-16 28,-2 0,12 -28,-2" fill="#38bdf8" opacity="0.8" />
+      <polygon points="-28,-2 0,12 0,32 -28,18" fill="#0284c7" />
+      <polygon points="0,12 28,-2 28,18 0,32" fill="#0369a1" />
+    </g>
+
+    <!-- Top Connection Dashed Beams -->
+    <path d="M256 124 L256 160" stroke="#38bdf8" stroke-width="2.5" stroke-dasharray="4,4" opacity="0.7" />
+
+    <!-- Container 1: Top Stacked Primary Container (Isometric 3D Box) -->
+    <g id="top-container">
+      <!-- Top Face -->
+      <polygon points="256,160 380,224 256,288 132,224" fill="#1e2230" stroke="#38bdf8" stroke-width="3" stroke-linejoin="round" />
+      <!-- Top Face Corrugations / Container Slats -->
+      <line x1="174" y1="202" x2="298" y2="266" stroke="#38bdf8" stroke-width="1.5" opacity="0.5" />
+      <line x1="214" y1="182" x2="338" y2="246" stroke="#38bdf8" stroke-width="1.5" opacity="0.5" />
+
+      <!-- Left Face -->
+      <polygon points="132,224 256,288 256,360 132,296" fill="url(#boxFrontGrad1)" stroke="#38bdf8" stroke-width="3" stroke-linejoin="round" />
+      <!-- Left Face Ribs / Cargo Container Grooves -->
+      <line x1="163" y1="240" x2="163" y2="312" stroke="#2a3346" stroke-width="2.5" />
+      <line x1="194" y1="256" x2="194" y2="328" stroke="#2a3346" stroke-width="2.5" />
+      <line x1="225" y1="272" x2="225" y2="344" stroke="#2a3346" stroke-width="2.5" />
+
+      <!-- Right Face -->
+      <polygon points="256,288 380,224 380,296 256,360" fill="url(#boxSideGrad1)" stroke="#38bdf8" stroke-width="3" stroke-linejoin="round" />
+      <!-- Right Face Ribs / Cargo Container Grooves -->
+      <line x1="287" y1="272" x2="287" y2="344" stroke="#262b3a" stroke-width="2.5" />
+      <line x1="318" y1="256" x2="318" y2="328" stroke="#262b3a" stroke-width="2.5" />
+      <line x1="349" y1="240" x2="349" y2="312" stroke="#262b3a" stroke-width="2.5" />
+
+      <!-- Container Corner Castings / Lock Blocks -->
+      <rect x="127" y="219" width="10" height="12" rx="2" fill="#38bdf8" />
+      <rect x="251" y="283" width="10" height="12" rx="2" fill="#38bdf8" />
+      <rect x="375" y="219" width="10" height="12" rx="2" fill="#38bdf8" />
+      <rect x="251" y="354" width="10" height="12" rx="2" fill="#38bdf8" />
+      <rect x="127" y="290" width="10" height="12" rx="2" fill="#0284c7" />
+      <rect x="375" y="290" width="10" height="12" rx="2" fill="#0284c7" />
+    </g>
+
+    <!-- Sub-Containers in the Stack / Lower Deck Multi-container Tier -->
+    <!-- Left Bottom Container Fragment (representing array / list of items) -->
+    <g id="bottom-left-container" opacity="0.75">
+      <polygon points="90,320 180,366 180,418 90,372" fill="#12131a" stroke="#0284c7" stroke-width="2.5" stroke-linejoin="round" />
+      <polygon points="180,366 220,346 220,398 180,418" fill="#191a24" stroke="#0284c7" stroke-width="2.5" stroke-linejoin="round" />
+      <line x1="120" y1="335" x2="120" y2="387" stroke="#222736" stroke-width="2" />
+      <line x1="150" y1="351" x2="150" y2="403" stroke="#222736" stroke-width="2" />
+      <!-- Mini status led -->
+      <circle cx="106" cy="342" r="3" fill="#38bdf8" />
+    </g>
+
+    <!-- Right Bottom Container Fragment (representing cluster) -->
+    <g id="bottom-right-container" opacity="0.75">
+      <polygon points="292,346 332,366 332,418 292,398" fill="#12131a" stroke="#0284c7" stroke-width="2.5" stroke-linejoin="round" />
+      <polygon points="332,366 422,320 422,372 332,418" fill="#191a24" stroke="#0284c7" stroke-width="2.5" stroke-linejoin="round" />
+      <line x1="362" y1="351" x2="362" y2="403" stroke="#222736" stroke-width="2" />
+      <line x1="392" y1="335" x2="392" y2="387" stroke="#222736" stroke-width="2" />
+      <!-- Mini status led -->
+      <circle cx="406" cy="342" r="3" fill="#38bdf8" />
+    </g>
+
+    <!-- UI List Indicator Rows (Visual representation of Container List / Catalog) -->
+    <g id="list-lines-badge" transform="translate(196, 426)">
+      <rect x="0" y="0" width="120" height="28" rx="6" fill="#13141c" stroke="#22283a" stroke-width="1.5" />
+      <!-- List bullet icons and lines -->
+      <rect x="12" y="7" width="5" height="5" rx="1.5" fill="#38bdf8" />
+      <line x1="24" y1="9.5" x2="65" y2="9.5" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" />
+      <rect x="12" y="16" width="5" height="5" rx="1.5" fill="#38bdf8" opacity="0.6" />
+      <line x1="24" y1="18.5" x2="52" y2="18.5" stroke="#64748b" stroke-width="2" stroke-linecap="round" />
+      <line x1="82" y1="14" x2="108" y2="14" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" />
+    </g>
+  </g>
+</svg>

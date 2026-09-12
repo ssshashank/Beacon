@@ -1,0 +1,92 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Cyan beam and lighting effects -->
+    <linearGradient id="beamGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.9" />
+      <stop offset="55%" stop-color="#22d3ee" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#0ea5e9" stop-opacity="0" />
+    </linearGradient>
+    <linearGradient id="beamGradMirror" x1="100%" y1="0%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.9" />
+      <stop offset="55%" stop-color="#22d3ee" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#0ea5e9" stop-opacity="0" />
+    </linearGradient>
+    <linearGradient id="towerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#5ee0ff" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="softGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="18" result="blur2" />
+      <feComposite in="SourceGraphic" in2="blur2" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Transparent background: no rect/vignette fill so it blends into any surface -->
+
+  <!-- Centered icon group -->
+  <g id="beacon-center-icon" transform="translate(0, 44)">
+    <!-- Radar / broadcast rings from beacon core -->
+    <g fill="none" stroke="#0ea5e9" opacity="0.32" stroke-width="2.5">
+      <circle cx="256" cy="150" r="80" stroke-dasharray="14 10" />
+      <circle cx="256" cy="150" r="132" stroke-dasharray="8 12" opacity="0.55" />
+      <circle cx="256" cy="150" r="184" stroke-dasharray="4 16" opacity="0.28" />
+    </g>
+
+    <!-- Twin sweeping light beams -->
+    <path d="M256 150 L452 82 A230 230 0 0 1 452 218 Z" fill="url(#beamGrad)" />
+    <path d="M256 150 L60 82 A230 230 0 0 0 60 218 Z" fill="url(#beamGradMirror)" />
+
+    <!-- Beacon tower & base -->
+    <g id="beaconStructure">
+      <!-- Server / foundation base -->
+      <path d="M164 358 H348 L330 398 H182 Z" fill="#141419" stroke="#2a2a35" stroke-width="2.5" />
+
+      <!-- Middle tier container box -->
+      <rect x="176" y="306" width="160" height="44" rx="7" fill="#0c0d12" stroke="#38bdf8" stroke-width="2.5" />
+
+      <!-- Status LEDs -->
+      <circle cx="203" cy="328" r="4.5" fill="#22c55e" filter="url(#glow)" />
+      <circle cx="222" cy="328" r="4.5" fill="#38bdf8" />
+      <circle cx="241" cy="328" r="4.5" fill="#38bdf8" />
+
+      <!-- Terminal lines -->
+      <line x1="264" y1="324" x2="316" y2="324" stroke="#475569" stroke-width="3" stroke-linecap="round" />
+      <line x1="264" y1="333" x2="298" y2="333" stroke="#334155" stroke-width="3" stroke-linecap="round" />
+
+      <!-- Lighthouse tower stem, tapered -->
+      <path d="M204 306 L222 188 H290 L308 306 Z" fill="#141419" stroke="#38bdf8" stroke-width="2.5" />
+
+      <!-- Central glow spine -->
+      <line x1="256" y1="296" x2="256" y2="196" stroke="#06b6d4" stroke-width="3" stroke-linecap="round" opacity="0.85" />
+
+      <!-- Lantern room platform deck -->
+      <path d="M210 188 H302 L311 172 H201 Z" fill="#23232f" stroke="#3d3d4f" stroke-width="2" />
+
+      <!-- Lantern housing -->
+      <rect x="222" y="140" width="68" height="34" rx="4" fill="#0c0d12" stroke="#5ee0ff" stroke-width="2" />
+
+      <!-- Light source core -->
+      <circle cx="256" cy="150" r="30" fill="#38bdf8" opacity="0.28" filter="url(#softGlow)" />
+      <circle cx="256" cy="150" r="17" fill="#e0f2fe" filter="url(#glow)" />
+      <circle cx="256" cy="150" r="8" fill="#ffffff" />
+
+      <!-- Roof cap -->
+      <path d="M216 140 Q256 108 296 140 Z" fill="url(#towerGrad)" />
+      <line x1="256" y1="108" x2="256" y2="92" stroke="#38bdf8" stroke-width="4.5" stroke-linecap="round" />
+      <circle cx="256" cy="86" r="5" fill="#5ee0ff" filter="url(#glow)" />
+    </g>
+
+    <!-- Signal pulses in beams -->
+    <circle cx="368" cy="118" r="5" fill="#38bdf8" filter="url(#glow)" />
+    <circle cx="420" cy="150" r="3.5" fill="#22d3ee" filter="url(#glow)" />
+    <circle cx="392" cy="184" r="4" fill="#0284c7" />
+    <circle cx="144" cy="118" r="5" fill="#38bdf8" filter="url(#glow)" />
+    <circle cx="92" cy="150" r="3.5" fill="#22d3ee" filter="url(#glow)" />
+    <circle cx="120" cy="184" r="4" fill="#0284c7" />
+  </g>
+</svg>
