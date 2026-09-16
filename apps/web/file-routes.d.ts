@@ -51,15 +51,21 @@ declare module "virtual:file-routes" {
       $$route?: undefined;
     },
     {
-      path: "/(home)/containers";
-      page: true;
-      $component: FileRouteLazyRef<typeof import("./src/routes/(home)/containers")>;
-      $$route?: undefined;
-    },
-    {
       path: "/(home)/images";
       page: true;
       $component: FileRouteLazyRef<typeof import("./src/routes/(home)/images")>;
+      $$route?: undefined;
+    },
+    {
+      path: "/(home)/containers/:id";
+      page: true;
+      $component: FileRouteLazyRef<typeof import("./src/routes/(home)/containers/[id]")>;
+      $$route?: undefined;
+    },
+    {
+      path: "/(home)/containers/";
+      page: true;
+      $component: FileRouteLazyRef<typeof import("./src/routes/(home)/containers/index")>;
       $$route?: undefined;
     }
   ];
@@ -99,10 +105,18 @@ declare module "virtual:file-routes" {
           children?: undefined;
         },
         {
-          path: "/containers";
-          id: "/containers";
+          path: "/containers/";
+          id: "/containers/";
           page: true;
-          $component: FileRouteLazyRef<typeof import("./src/routes/(home)/containers")>;
+          $component: FileRouteLazyRef<typeof import("./src/routes/(home)/containers/index")>;
+          $$route?: undefined;
+          children?: undefined;
+        },
+        {
+          path: "/containers/:id";
+          id: "/containers/:id";
+          page: true;
+          $component: FileRouteLazyRef<typeof import("./src/routes/(home)/containers/[id]")>;
           $$route?: undefined;
           children?: undefined;
         }

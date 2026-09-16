@@ -1,6 +1,7 @@
 import { RouteSectionProps, useLocation } from "@solidjs/router";
 import { Sidebar } from "../global/components/_common/sidebar";
 import ContainersSidebarPanel from "../modules/containers/components/containersPanel";
+import { isSidebarRouteActive } from "../global/utils/route";
 
 const _navItems = [
   {
@@ -20,14 +21,14 @@ const _navItems = [
 
 export default function HomeLayout(props: RouteSectionProps) {
   const location = useLocation();
-  const isActiveRoutes = (path: string) => location.pathname === path;
+  const isActiveRoutes = (path: string) => isSidebarRouteActive(location.pathname, path);
 
   return (
     <div class="w-screen h-screen mx-auto">
       <div class="w-full h-screen mx-auto p-2.5">
         <div class="flex items-start justify-start w-[calc(100vw-20px)] h-[calc(100vh-20px)]">
-          <Sidebar _navItems={_navItems} isActiveRoutes={isActiveRoutes}/>
-          <div class="rounded-md w-[calc(100vw-420px)] h-[calc(100vh-20px)] bg-[#151619] overflow-y-auto">
+          <Sidebar _navItems={_navItems} isActiveRoutes={isActiveRoutes} />
+          <div class="rounded-md w-full md:w-[calc(100vw-420px)] h-[calc(100vh-20px)] bg-[#151619] overflow-y-auto">
             {props?.children}
           </div>
         </div>

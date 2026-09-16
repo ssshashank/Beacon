@@ -1,3 +1,5 @@
+export const BASE_URL = "http://100.65.87.119:8000/api/v1";
+
 const HTTPStatusCode = {
   OK: 200,
   CREATED: 201,

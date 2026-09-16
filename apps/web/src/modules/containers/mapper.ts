@@ -29,3 +29,19 @@ export const formatContainerData = (rawData: any): ComposeDTO[] => {
 
   return Array.from(composeMap.values());
 };
+
+
+export const truncateLabel = (key: string, value: string) => {
+  const shouldTruncate =
+    key.includes("hash") ||
+    key.includes("image") ||
+    key.includes("config_files")||
+    key.includes("id") ||
+    key.includes("revision");
+
+  if (!shouldTruncate || value.length <= 24) {
+    return value;
+  }
+
+  return `${value.slice(0, 12)}...${value.slice(-8)}`;
+}

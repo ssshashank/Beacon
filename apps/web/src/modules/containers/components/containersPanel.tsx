@@ -1,4 +1,5 @@
 import { createMemo, For, Loading, Show } from "solid-js";
+import { useNavigate } from "@solidjs/router";
 import { listContainersQuery } from "../queries";
 import { createBGColorGenerator } from "../../../global/reactivity/createBgColor";
 import { LayersIcon } from "../../../global/components/_icons/layers";
@@ -9,8 +10,13 @@ import { ContainerStatus } from "../constant";
 import type { ComposeDTO } from "../types";
 import allContainersSvg from "~/assets/_svgs/allContainers.svg";
 import activeContainersSvg from "~/assets/_svgs/activeContainers.svg";
+import { isSidebarRouteActive } from "../../../global/utils/route";
+import { StatusDot } from "../../../global/components/_common/statusDot";
 
 function ComposeList(props: { composes: ComposeDTO[]; emptyIcon: string; emptyMessage: string }) {
+  const isActiveRoute = (path: string) => isSidebarRouteActive(location.pathname, path);
+  const navigate = useNavigate();
+
   return (
     <Show
       when={props.composes.length > 0}
@@ -41,7 +47,15 @@ function ComposeList(props: { composes: ComposeDTO[]; emptyIcon: string; emptyMe
                     {(c, index) => {
                       const [hexColor] = createBGColorGenerator(c.name);
                       return (
-                        <li class={`${index() < container?.containers?.length! - 1 ? 'my-1 border-b-[0.03px] border-neutral-700 py-2' : 'pt-2'} hover:bg-[#151619] cursor-pointer rounded-t-md`}>
+                        <li
+                          onClick={() => navigate(`/containers/${c?.id}`, {
+                            state: {
+                              container: c
+                            }
+                          })}
+                          class={`${index() < container?.containers?.length! - 1 ?
+                            'my-1 border-b-[0.03px] cursor-pointer border-neutral-700 py-2' : 'pt-2'}
+                         hover:bg-[#151619] cursor-pointer rounded-t-md`}>
                           <div class='flex items-center justify-start gap-3'>
                             <div class="h-8 w-8 rounded flex items-center justify-center"
                               style={{
@@ -49,13 +63,14 @@ function ComposeList(props: { composes: ComposeDTO[]; emptyIcon: string; emptyMe
                               }}>
                               <BoxIcons size={16} />
                             </div>
-                            <div>
-                              <p class='text-white text-sm'>{c.name}</p>
+                            <div class='flex items-center justify-between w-full'>
                               <div class="w-full max-w-[150px] overflow-hidden">
+                                <p class='text-white text-sm'>{c.name}</p>
                                 <p class="truncate [direction:rtl] text-left text-xs text-gray-500">
                                   &lrm;{c?.image}
                                 </p>
                               </div>
+                              <StatusDot status={c?.status!} size={10} />
                             </div>
                           </div>
                         </li>
@@ -85,7 +100,7 @@ export default function ContainersSidebarPanel(props: any) {
   );
 
   return (
-    <div class="flex-1 h-full border-l-[0.03px] border-neutral-800 p-2">
+    <div class="flex-1 h-full p-2">
       <div class="h-full">
         <div class='border-b-[0.03px] border-neutral-700 pb-2 flex items-center justify-between'>
           <span class="text-xl">
@@ -93,17 +108,19 @@ export default function ContainersSidebarPanel(props: any) {
           </span>
         </div>
         <Tabs defaultValue="all">
-          <TabsList style="mt-3 bg-[#0c0c0d] p-1 rounded-md gap-1">
-            <TabsTrigger value="all" style="flex-1 text-center">All</TabsTrigger>
-            <TabsTrigger value="active" style="flex-1 text-center">Active</TabsTrigger>
+          <TabsList style="mt-3 bg-[#151619] p-1 rounded-md gap-1" indicatorStyle="bg-[#3B3B3B80]">
+            <TabsTrigger value="all" style="flex-1 flex  flex-row items-center justify-center gap-3 text-center">
+              <span>All</span>
+            </TabsTrigger>
+            <TabsTrigger value="active" style="flex-1 flex flex-row items-center justify-center gap-3 text-center">
+              <span>Active</span>
+            </TabsTrigger>
           </TabsList>
-
           <TabsContent value="all">
             <Loading>
               <ComposeList composes={composes()} emptyIcon={allContainersSvg} emptyMessage="No containers found" />
             </Loading>
           </TabsContent>
-
           <TabsContent value="active">
             <Loading>
               <ComposeList composes={activeComposes()} emptyIcon={activeContainersSvg} emptyMessage="No active containers running" />
