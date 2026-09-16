@@ -72,13 +72,10 @@ impl ContainerController {
         }
     }
 
-    pub async fn get_container_resource_usage_stats_by_id(&self, id: &str) -> Json<Value> {
-        match self.service.get_containers_resource_usage(id).await {
-            Ok(json) => Json(json),
-            Err(e) => {
-                eprintln!("Error talking to Docker socket: {e}");
-                Json(Value::Array(vec![]))
-            }
-        }
+    pub async fn stream_container_resource_usage(
+        &self,
+        id: &str,
+    ) -> Sse<impl futures_util::Stream<Item = Result<Event, Infallible>> + use<>> {
+        Sse::new(self.service.stream_container_resource_usage(id).await)
     }
 }

@@ -36,7 +36,7 @@ pub fn routes(controller: Arc<ContainerController>) -> Router {
         )
         .route(
             ContainerRoutesName::GET_CONTAINER_RESOURCE_USAGE_STATS_BY_ID,
-            get(get_container_resource_usage_stats_by_id),
+            get(stream_container_resource_usage_events),
         )
         .with_state(controller)
 }
@@ -75,18 +75,16 @@ async fn export_container_by_id(
     controller.export_container_by_id(&id).await
 }
 
-async fn get_container_resource_usage_stats_by_id(
-    State(controller): State<Arc<ContainerController>>,
-    Path(id): Path<String>,
-) -> Json<Value> {
-    controller
-        .get_container_resource_usage_stats_by_id(&id)
-        .await
-}
-
 async fn stream_container_logs_event(
     Path(id): Path<String>,
     State(controller): State<Arc<ContainerController>>,
 ) -> Sse<impl futures_util::Stream<Item = Result<Event, Infallible>>> {
     controller.stream_container_logs_by_id(&id).await
+}
+
+async fn stream_container_resource_usage_events(
+    Path(id): Path<String>,
+    State(controller): State<Arc<ContainerController>>,
+) -> Sse<impl futures_util::Stream<Item = Result<Event, Infallible>>> {
+    controller.stream_container_resource_usage(&id).await
 }

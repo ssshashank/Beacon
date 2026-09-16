@@ -73,12 +73,24 @@ impl ContainerService {
         utils::call_end_points(&self.client, DockerEndpoints::EXPORT_A_CONTAINER, Some(id)).await
     }
 
-    pub async fn get_containers_resource_usage(&self, id: &str) -> Result<Value, Box<dyn Error>> {
-        utils::call_end_points(
-            &self.client,
-            DockerEndpoints::GET_CONTAINERS_RESOURSE_USAGE_STATS,
-            Some(id),
-        )
-        .await
+    pub async fn stream_container_resource_usage(&self, id: &str) -> FutureImpl {
+        let url = format!(
+            "http://{}/{}/containers/{}/stats",
+            *HOST,
+            config::APP_VERSION,
+            id
+        );
+
+        let client = self.client.clone();
+
+        let stream_fut = async move {
+            let response = client.get(url).send().await.unwrap();
+            response.bytes_stream().map(|chunk| {
+                let bytes = chunk.unwrap();
+                let data = String::from_utf8_lossy(&bytes).to_string();
+                Ok(Event::default().data(data))
+            })
+        };
+        futures_util::stream::once(stream_fut).flatten().boxed()
     }
 }
