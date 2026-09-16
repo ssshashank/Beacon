@@ -1,6 +1,8 @@
 use crate::modules::containers::service::ContainerService;
 use axum::Json;
+use axum::response::{Sse, sse::Event};
 use serde_json::Value;
+use std::convert::Infallible;
 
 pub struct ContainerController {
     service: ContainerService,
@@ -43,14 +45,11 @@ impl ContainerController {
         }
     }
 
-    pub async fn get_container_logs_by_id(&self, id: &str) -> Json<Value> {
-        match self.service.get_container_logs(id).await {
-            Ok(json) => Json(json),
-            Err(e) => {
-                eprintln!("Error talking to Docker socket: {e}");
-                Json(Value::Array(vec![]))
-            }
-        }
+    pub async fn stream_container_logs_by_id(
+        &self,
+        id: &str,
+    ) -> Sse<impl futures_util::Stream<Item = Result<Event, Infallible>> + use<>> {
+        Sse::new(self.service.stream_container_logs(id).await)
     }
 
     pub async fn get_changes_on_container_file_system_by_id(&self, id: &str) -> Json<Value> {

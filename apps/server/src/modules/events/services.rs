@@ -1,4 +1,7 @@
-use crate::global::{config, docker::DockerEndpoints};
+use crate::global::{
+    config::{self, HOST},
+    docker::DockerEndpoints,
+};
 use axum::response::sse::Event;
 use futures_util::{StreamExt, stream::BoxStream};
 use std::convert::Infallible;
@@ -16,7 +19,8 @@ impl EventService {
 
     pub async fn stream_events(&self) -> FutureImpl {
         let url = format!(
-            "http://localhost/{}{}",
+            "http://{}/{}{}",
+            *HOST,
             config::APP_VERSION,
             DockerEndpoints::STREAM_EVENTS
         );

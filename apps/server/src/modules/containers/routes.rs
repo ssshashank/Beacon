@@ -2,10 +2,11 @@ use crate::modules::containers::{constant::ContainerRoutesName, controller::Cont
 use axum::{
     Json, Router,
     extract::{Path, State},
+    response::{Sse, sse::Event},
     routing::get,
 };
 use serde_json::Value;
-use std::sync::Arc;
+use std::{convert::Infallible, sync::Arc};
 
 pub fn routes(controller: Arc<ContainerController>) -> Router {
     Router::new()
@@ -23,7 +24,7 @@ pub fn routes(controller: Arc<ContainerController>) -> Router {
         )
         .route(
             ContainerRoutesName::GET_CONTAINER_LOGS,
-            get(get_container_logs_by_id),
+            get(stream_container_logs_event),
         )
         .route(
             ContainerRoutesName::GET_CHANGES_ON_CONTAINER_FILE_SYSTEM_BY_ID,
@@ -58,13 +59,6 @@ async fn get_all_process_running_in_container_by_id(
     controller.get_all_process_running_in_container(&id).await
 }
 
-async fn get_container_logs_by_id(
-    State(controller): State<Arc<ContainerController>>,
-    Path(id): Path<String>,
-) -> Json<Value> {
-    controller.get_container_logs_by_id(&id).await
-}
-
 async fn get_changes_on_container_file_system_by_id(
     State(controller): State<Arc<ContainerController>>,
     Path(id): Path<String>,
@@ -88,4 +82,11 @@ async fn get_container_resource_usage_stats_by_id(
     controller
         .get_container_resource_usage_stats_by_id(&id)
         .await
+}
+
+async fn stream_container_logs_event(
+    Path(id): Path<String>,
+    State(controller): State<Arc<ContainerController>>,
+) -> Sse<impl futures_util::Stream<Item = Result<Event, Infallible>>> {
+    controller.stream_container_logs_by_id(&id).await
 }
