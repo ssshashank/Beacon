@@ -197,17 +197,18 @@ const TabsContent = (props: TabsContentProps) => {
   const { activeTab } = useTabs();
 
   return (
-    <Dynamic
-      component={props?.as || "div"}
-      ref={props?.ref}
-      role="tabpanel"
-      tabindex={0}
-      data-state="active"
-      style={{ display: activeTab() === props.value ? undefined : "none" }}
-      class={_CN("focus:outline-none", props?.style)}
-      {...rest}>
-      {props?.children}
-    </Dynamic>
+    <Show when={activeTab() === props.value}>
+      <Dynamic
+        component={props?.as || "div"}
+        ref={props?.ref}
+        role="tabpanel"
+        tabindex={0}
+        data-state="active"
+        class={_CN("focus:outline-none", props?.style)}
+        {...rest}>
+        {props?.children}
+      </Dynamic>
+    </Show>
   );
 };
 
