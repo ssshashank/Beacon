@@ -10,11 +10,11 @@ import { ContainerStatus } from "../constant";
 import type { ComposeDTO } from "../types";
 import allContainersSvg from "~/assets/_svgs/allContainers.svg";
 import activeContainersSvg from "~/assets/_svgs/activeContainers.svg";
-import { isSidebarRouteActive } from "../../../global/utils/route";
+// import { isSidebarRouteActive } from "../../../global/utils/route";
 import { StatusDot } from "../../../global/components/_common/statusDot";
 
 function ComposeList(props: { composes: ComposeDTO[]; emptyIcon: string; emptyMessage: string }) {
-  const isActiveRoute = (path: string) => isSidebarRouteActive(location.pathname, path);
+  // const isActiveRoute = (path: string) => isSidebarRouteActive(location.pathname, path);
   const navigate = useNavigate();
 
   return (
@@ -27,33 +27,33 @@ function ComposeList(props: { composes: ComposeDTO[]; emptyIcon: string; emptyMe
         </div>
       }>
       <Accordion class="mt-2">
-        <For each={props.composes}>
-          {(container, index) => {
-            const [hexColor] = createBGColorGenerator(container.label);
-
+        <For each={props?.composes}>
+          {(compose) => {
+            const [hexColor] = createBGColorGenerator(compose.label);
             return (
               <AccordionItem
-                open={index() === 0}
+                open={true}
                 title={
                   <div class="flex items-center justify-start gap-3">
                     <div class="h-7 w-7 flex items-center justify-center rounded text-md font-medium">
                       <LayersIcon color={hexColor()} />
                     </div>
-                    <span class="text-sm text-text-primary truncate">{container.label}</span>
+                    <span class="text-sm text-text-primary truncate">{compose.label}</span>
                   </div>
                 }>
                 <ul>
-                  <For each={container?.containers}>
+                  <For each={compose?.containers}>
                     {(c, index) => {
                       const [hexColor] = createBGColorGenerator(c.name);
                       return (
                         <li
                           onClick={() => navigate(`/containers/${c?.id}`, {
                             state: {
-                              container: c
+                              container: c,
+                              color: hexColor()
                             }
                           })}
-                          class={`${index() < container?.containers?.length! - 1 ?
+                          class={`${index() < compose?.containers?.length! - 1 ?
                             'my-1 border-b-[0.03px] cursor-pointer border-neutral-700 py-2' : 'pt-2'}
                          hover:bg-[#151619] cursor-pointer rounded-t-md`}>
                           <div class='flex items-center justify-start gap-3'>
@@ -89,20 +89,13 @@ function ComposeList(props: { composes: ComposeDTO[]; emptyIcon: string; emptyMe
 
 export default function ContainersSidebarPanel(props: any) {
   const composes = createMemo(() => listContainersQuery() ?? []);
-
-  const activeComposes = createMemo(() =>
-    composes()
-      .map((compose) => ({
-        ...compose,
-        containers: compose.containers?.filter((c) => c.status === ContainerStatus.RUNNING),
-      }))
-      .filter((compose) => (compose.containers?.length ?? 0) > 0)
-  );
+  const activeComposes = createMemo(() => composes()?.filter((c) => c?.status === ContainerStatus.RUNNING));
+  const inactiveComposes = createMemo(() => composes()?.filter((c) => c?.status === ContainerStatus.EXITED));
 
   return (
     <div class="flex-1 h-full p-2">
       <div class="h-full">
-        <div class='border-b-[0.03px] border-neutral-700 pb-2 flex items-center justify-between'>
+        <div class='border-b-[0.03px] border-neutral-800 pb-2 flex items-center justify-between'>
           <span class="text-xl">
             {props.label ?? ""}
           </span>
@@ -110,20 +103,28 @@ export default function ContainersSidebarPanel(props: any) {
         <Tabs defaultValue="all">
           <TabsList style="mt-3 bg-[#151619] p-1 rounded-md gap-1" indicatorStyle="bg-[#3B3B3B80]">
             <TabsTrigger value="all" style="flex-1 flex  flex-row items-center justify-center gap-3 text-center">
-              <span>All</span>
+              <span class='text-blue-300'>All</span>
             </TabsTrigger>
-            <TabsTrigger value="active" style="flex-1 flex flex-row items-center justify-center gap-3 text-center">
-              <span>Active</span>
+            <TabsTrigger value="running" style="flex-1 flex flex-row items-center justify-center gap-3 text-center">
+              <span class='text-green-300'>Running</span>
+            </TabsTrigger>
+            <TabsTrigger value="exited" style="flex-1 flex flex-row items-center justify-center gap-3 text-center">
+              <span class='text-red-300'>Exited</span>
             </TabsTrigger>
           </TabsList>
           <TabsContent value="all">
             <Loading>
-              <ComposeList composes={composes()} emptyIcon={allContainersSvg} emptyMessage="No containers found" />
+              <ComposeList composes={[...activeComposes(), ...inactiveComposes()]} emptyIcon={allContainersSvg} emptyMessage="No containers found" />
             </Loading>
           </TabsContent>
-          <TabsContent value="active">
+          <TabsContent value="running">
             <Loading>
               <ComposeList composes={activeComposes()} emptyIcon={activeContainersSvg} emptyMessage="No active containers running" />
+            </Loading>
+          </TabsContent>
+          <TabsContent value="exited">
+            <Loading>
+              <ComposeList composes={inactiveComposes()} emptyIcon={activeContainersSvg} emptyMessage="No active containers running" />
             </Loading>
           </TabsContent>
         </Tabs>
