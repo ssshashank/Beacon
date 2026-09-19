@@ -20,3 +20,18 @@ export interface ContainerDTO {
   kind?: ContainerKindType;
   labels?: any;
 }
+
+export interface StatPoint {
+  time: string;
+  cpu: {};
+  memory?: {};
+  network?: {
+    rx: number;
+    tx: number;
+  };
+  disk?: {
+    read: number;
+    write: number;
+  };
+  pids?: number;
+};

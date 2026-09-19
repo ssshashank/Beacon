@@ -5,7 +5,6 @@ export const formatContainerData = (rawData: any): ComposeDTO[] => {
 
   for (const d of rawData ?? []) {
     const project = d?.Labels?.["com.docker.compose.project"] || d?.Labels?.["org.opencontainers.image.title"];
-
     if (!project) continue;
 
     if (!composeMap.has(project)) {
@@ -14,6 +13,7 @@ export const formatContainerData = (rawData: any): ComposeDTO[] => {
         label: project,
         version: d?.Labels?.["com.docker.compose.version"] || d?.Labels?.["org.opencontainers.image.version"],
         containers: [],
+        status: d?.State
       });
     }
 
