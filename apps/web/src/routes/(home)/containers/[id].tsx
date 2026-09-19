@@ -1,7 +1,6 @@
 import { createMemo, lazy, Loading } from "solid-js";
 import { useLocation, useParams } from "@solidjs/router";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../global/components/_common/tabs";
-import { createBGColorGenerator } from "../../../global/reactivity/createBgColor";
 import { CopyIcon } from "../../../global/components/_icons/copy";
 import { StatusDot } from "../../../global/components/_common/statusDot";
 import Tooltip from "../../../global/components/_common/tooltip";
@@ -13,8 +12,7 @@ const LazyContainerFiles = lazy(() => import("../../../modules/containers/compon
 
 export default function ContainerByIDScreen() {
   const params = useParams();
-  const state: any = useLocation()?.state!;
-  const [hexColor] = createBGColorGenerator(state?.container?.name!);
+  const location: any = useLocation();
   const container = createMemo(() => inspectContainerByIDQuery(params?.id!));
 
   return (
@@ -24,8 +22,8 @@ export default function ContainerByIDScreen() {
           <div class='flex items-center justify-start gap-3'>
             <StatusDot status={container()?.State?.Status} size={10} />
             <div>
-              <span style={{ color: hexColor() }} class='text-md'>
-                {state?.container?.name!}
+              <span style={{ color:location?.state?.color }} class='text-md'>
+                {location?.state?.container?.name}
               </span>
               &nbsp;&nbsp;/&nbsp;&nbsp;
               <span class="text-gray-500">
