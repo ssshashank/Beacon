@@ -33,7 +33,7 @@ export function AccordionItem(props: AccordionItemType) {
       <summary class="cursor-pointer font-medium p-2 select-none list-none hover:bg-[#151619]">
         {props.title}
       </summary>
-      <div class="p-4 pt-0 text-white select-none rounded-md">
+      <div class="pl-4 pb-2 pr-2 pt-1 text-white select-none rounded-md">
         {props.children}
       </div>
     </details>

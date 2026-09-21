@@ -26,8 +26,8 @@ export interface StatPoint {
   cpu: {};
   memory?: {};
   network?: {
-    rx: number;
-    tx: number;
+    rxKBps: number;
+    txKBps: number;
   };
   disk?: {
     read: number;

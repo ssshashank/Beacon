@@ -174,7 +174,7 @@ const TabsTrigger = (props: TabsTriggerProps) => {
       onKeyDown={onKeyDown}
       class={_CN(
         "relative z-10 px-3 py-1 rounded text-sm transition-colors duration-300 focus:outline-none",
-        isActive() ? "text-white" : "text-gray-600 hover:text-gray-900",
+        isActive() ? "text-white" : "text-gray-600",
         isLocked() ? "opacity-40 cursor-not-allowed" : "cursor-pointer",
         props?.style
       )}

@@ -1,5 +1,5 @@
 import { createMemo, For, Loading, Show } from "solid-js";
-import { useNavigate } from "@solidjs/router";
+import { useLocation, useNavigate } from "@solidjs/router";
 import { listContainersQuery } from "../queries";
 import { createBGColorGenerator } from "../../../global/reactivity/createBgColor";
 import { LayersIcon } from "../../../global/components/_icons/layers";
@@ -10,11 +10,12 @@ import { ContainerStatus } from "../constant";
 import type { ComposeDTO } from "../types";
 import allContainersSvg from "~/assets/_svgs/allContainers.svg";
 import activeContainersSvg from "~/assets/_svgs/activeContainers.svg";
-// import { isSidebarRouteActive } from "../../../global/utils/route";
+import { isSidebarRouteActive } from "../../../global/utils/route";
 import { StatusDot } from "../../../global/components/_common/statusDot";
 
 function ComposeList(props: { composes: ComposeDTO[]; emptyIcon: string; emptyMessage: string }) {
-  // const isActiveRoute = (path: string) => isSidebarRouteActive(location.pathname, path);
+  const location = useLocation();
+  const isActiveRoute = (path: string) => isSidebarRouteActive(location.pathname, path);
   const navigate = useNavigate();
 
   return (
@@ -45,6 +46,7 @@ function ComposeList(props: { composes: ComposeDTO[]; emptyIcon: string; emptyMe
                   <For each={compose?.containers}>
                     {(c, index) => {
                       const [hexColor] = createBGColorGenerator(c.name);
+                      const isActive = createMemo(() => isActiveRoute(`/containers/${c?.id}`));
                       return (
                         <li
                           onClick={() => navigate(`/containers/${c?.id}`, {
@@ -53,9 +55,10 @@ function ComposeList(props: { composes: ComposeDTO[]; emptyIcon: string; emptyMe
                               color: hexColor()
                             }
                           })}
-                          class={`${index() < compose?.containers?.length! - 1 ?
-                            'my-1 border-b-[0.03px] cursor-pointer border-neutral-700 py-2' : 'pt-2'}
-                         hover:bg-[#151619] cursor-pointer rounded-t-md`}>
+                          class={`p-2 cursor-pointer rounded-md
+                          ${index() < compose?.containers?.length! - 1 ?
+                              'my-1 border-b-[0.03px] border-neutral-700' : ''}
+                          ${isActive() ? 'bg-[#3B3B3B80]' : ''}`}>
                           <div class='flex items-center justify-start gap-3'>
                             <div class="h-8 w-8 rounded flex items-center justify-center"
                               style={{
@@ -70,7 +73,9 @@ function ComposeList(props: { composes: ComposeDTO[]; emptyIcon: string; emptyMe
                                   &lrm;{c?.image}
                                 </p>
                               </div>
-                              <StatusDot status={c?.status!} size={10} />
+                              <Show when={c?.status === ContainerStatus.RUNNING}>
+                                <StatusDot status={c?.status!} size={10} />
+                              </Show>
                             </div>
                           </div>
                         </li>

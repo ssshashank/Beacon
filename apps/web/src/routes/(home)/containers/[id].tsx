@@ -1,10 +1,12 @@
-import { createMemo, lazy, Loading } from "solid-js";
+import { createMemo, lazy, Loading, Show } from "solid-js";
 import { useLocation, useParams } from "@solidjs/router";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../global/components/_common/tabs";
 import { CopyIcon } from "../../../global/components/_icons/copy";
 import { StatusDot } from "../../../global/components/_common/statusDot";
 import Tooltip from "../../../global/components/_common/tooltip";
 import { inspectContainerByIDQuery } from "../../../modules/containers/queries";
+import { ContainerStatus } from "../../../modules/containers/constant";
+import ContainerNotFound from "../../../modules/containers/components/notFound";
 const LazyContainerInfo = lazy(() => import("../../../modules/containers/components/containerInfo"));
 const LazyContainerStats = lazy(() => import("../../../modules/containers/components/containerStats"));
 const LazyContainerLogs = lazy(() => import("../../../modules/containers/components/containerLogs"));
@@ -22,7 +24,7 @@ export default function ContainerByIDScreen() {
           <div class='flex items-center justify-start gap-3'>
             <StatusDot status={container()?.State?.Status} size={10} />
             <div>
-              <span style={{ color:location?.state?.color }} class='text-md'>
+              <span style={{ color: location?.state?.color }} class='text-md'>
                 {location?.state?.container?.name}
               </span>
               &nbsp;&nbsp;/&nbsp;&nbsp;
@@ -72,34 +74,46 @@ export default function ContainerByIDScreen() {
                 </Loading>
               </TabsContent>
               <TabsContent value="stats" class="h-full overflow-y-auto">
-                <Loading
-                  fallback={
-                    <div class="h-full flex items-center justify-center text-gray-500">
-                      Loading...
-                    </div>
-                  }>
-                  <LazyContainerStats params={params} />
-                </Loading>
+                <Show
+                  when={container()?.State?.Status === ContainerStatus.RUNNING}
+                  fallback={<ContainerNotFound />}>
+                  <Loading
+                    fallback={
+                      <div class="h-full flex items-center justify-center text-gray-500">
+                        Loading...
+                      </div>
+                    }>
+                    <LazyContainerStats params={params} />
+                  </Loading>
+                </Show>
               </TabsContent>
               <TabsContent value="logs" class="h-full overflow-y-auto">
-                <Loading
-                  fallback={
-                    <div class="h-full flex items-center justify-center text-gray-500">
-                      Loading...
-                    </div>
-                  }>
-                  <LazyContainerLogs params={params} />
-                </Loading>
+                <Show
+                  when={container()?.State?.Status === ContainerStatus.RUNNING}
+                  fallback={<ContainerNotFound />}>
+                  <Loading
+                    fallback={
+                      <div class="h-full flex items-center justify-center text-gray-500">
+                        Loading...
+                      </div>
+                    }>
+                    <LazyContainerLogs params={params} />
+                  </Loading>
+                </Show>
               </TabsContent>
               <TabsContent value="files" class="h-full overflow-y-auto">
-                <Loading
-                  fallback={
-                    <div class="h-full flex items-center justify-center text-gray-500">
-                      Loading...
-                    </div>
-                  }>
-                  <LazyContainerFiles />
-                </Loading>
+                <Show
+                  when={container()?.State?.Status === ContainerStatus.RUNNING}
+                  fallback={<ContainerNotFound />}>
+                  <Loading
+                    fallback={
+                      <div class="h-full flex items-center justify-center text-gray-500">
+                        Loading...
+                      </div>
+                    }>
+                    <LazyContainerFiles />
+                  </Loading>
+                </Show>
               </TabsContent>
             </div>
           </Tabs>
