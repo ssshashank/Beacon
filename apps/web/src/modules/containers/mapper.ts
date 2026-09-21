@@ -97,8 +97,7 @@ export function formatCPUStats(data: any) {
   }
 
   return {
-    cpuPercentage,
-    numberCpus,
+    cpuPercentage, numberCpus
   };
 }
 

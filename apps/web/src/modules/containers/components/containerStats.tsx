@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, Loading } from "solid-js";
+import { createEffect, createSignal, Loading } from "solid-js";
 import { BASE_URL } from "../../../global/constants/network";
 import { StatPoint } from "../types";
 import { CPUStats } from "./cpuStats";
@@ -32,7 +32,7 @@ export default function ContainerStats(props: any) {
         if (!isConnected()) return;
         const data = JSON.parse(event.data);
         const memoryStats = formatMemoryStats(data);
-        const cpuStats: any = formatCPUStats(data);
+        const cpuStats = formatCPUStats(data) as any;
         const networkStats = formatNetworkStats(data);
         const diskIOStats = formatDiskIOStats(data, previousDisk);
 
@@ -52,7 +52,7 @@ export default function ContainerStats(props: any) {
         const point: StatPoint = {
           time: data.read,
           cpu: {
-            avg: Math.max(0, Math.min(Number.isFinite(cpuStats?.cpuPercentage) ? cpuStats?.cpuPercentage : 0, 100)),
+            current: Number.isFinite(cpuStats?.cpuPercentage) ? cpuStats?.cpuPercentage : 0,
           },
           memory: memoryStats,
           network: networkStats,
@@ -81,21 +81,23 @@ export default function ContainerStats(props: any) {
 
   return (
     <div class="rounded-md bg-[#0A0A0B] h-full">
-      <div class="p-1 grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-2 gap-y-2">
-        <Loading fallback={<h1>CPU Stats loading...</h1>}>
-          <CPUStats stats={stats()} cpuCores={cpuCores} />
-        </Loading>
-        <Loading fallback={<h1>Memory Stats loading...</h1>}>
-          <MemoryStats stats={stats()} />
-        </Loading>
-      </div>
-      <div class="p-1 grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-2 gap-y-2">
-        <Loading fallback={<h1>Network Stats loading...</h1>}>
-          <NetworkStats stats={stats()} />
-        </Loading>
-        <Loading fallback={<h1>DiskIO Stats loading...</h1>}>
-          <DiskIOStats stats={stats()} />
-        </Loading>
+      <div class="p-1 grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-2 gap-y-2 items-start">
+        <div class='grid gap-y-2'>
+          <Loading fallback={<h1>CPU Stats loading...</h1>}>
+            <CPUStats stats={stats()} cpuCores={cpuCores} />
+          </Loading>
+          <Loading fallback={<h1>Memory Stats loading...</h1>}>
+            <MemoryStats stats={stats()} />
+          </Loading>
+        </div>
+        <div class='grid gap-y-2'>
+          <Loading fallback={<h1>Network Stats loading...</h1>}>
+            <NetworkStats stats={stats()} />
+          </Loading>
+          <Loading fallback={<h1>DiskIO Stats loading...</h1>}>
+            <DiskIOStats stats={stats()} />
+          </Loading>
+        </div>
       </div>
     </div>
   );

@@ -104,12 +104,12 @@ export function DiskIOStats(props: any) {
             const total = read + write;
             const max = maxTotal();
             const totalHeight = max > 0 ? (total / max) * 100 : 0;
-            const readHeight = total > 0 ? (read / total) * totalHeight : 1;
-            const writeHeight = total > 0 ? (write / total) * totalHeight : 1;
+            const readHeight = total > 0 ? (read / total) * totalHeight : 3;
+            const writeHeight = total > 0 ? (write / total) * totalHeight : 3;
 
             return (
               <div
-                class="flex h-full shrink-0 flex-col justify-end"
+                class="flex h-full shrink-0 flex-col justify-end transition-all origin-bottom"
                 style={{
                   width: `${BAR_WIDTH}px`,
                 }}>

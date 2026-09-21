@@ -209,21 +209,50 @@
     word-break: break-word;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply m-0 font-semibold leading-tight text-text-primary;
   }
 
-  h1 { @apply text-3xl; }
-  h2 { @apply text-2xl; }
-  h3 { @apply text-xl; }
-  h4 { @apply text-lg; }
-  h5 { @apply text-md; }
-  h6 { @apply text-base; }
+  h1 {
+    @apply text-3xl;
+  }
 
-  p { @apply m-0 text-text-secondary; }
+  h2 {
+    @apply text-2xl;
+  }
 
-  a { @apply text-text-link no-underline; }
-  a:hover { @apply underline; }
+  h3 {
+    @apply text-xl;
+  }
+
+  h4 {
+    @apply text-lg;
+  }
+
+  h5 {
+    @apply text-md;
+  }
+
+  h6 {
+    @apply text-base;
+  }
+
+  p {
+    @apply m-0 text-text-secondary;
+  }
+
+  a {
+    @apply text-text-link no-underline;
+  }
+
+  a:hover {
+    @apply underline;
+  }
 
   ::selection {
     background-color: var(--color-primary-subtle-bg);
