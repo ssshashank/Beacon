@@ -24,11 +24,12 @@ export default function ContainerStats(props: any) {
     (id: string) => {
       if (!id) return;
       const es = new EventSource(`${BASE_URL}/containers/getContainerResourceUsageStatsById/${id}`);
-
       es.onopen = () => setIsConnected(true);
 
       es.onmessage = (event) => {
         if (!event?.data) return;
+
+        if (!isConnected()) return;
         const data = JSON.parse(event.data);
         const memoryStats = formatMemoryStats(data);
         const cpuStats: any = formatCPUStats(data);
@@ -66,11 +67,13 @@ export default function ContainerStats(props: any) {
 
       es.onerror = () => {
         setIsConnected(false);
+        setStats([]);
         es.close();
       };
 
       return () => {
         setIsConnected(false);
+        setStats([]);
         es.close();
       };
     }

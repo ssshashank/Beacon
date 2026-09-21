@@ -15,8 +15,8 @@ export function Sidebar(props: any) {
         <div class="fixed bottom-10 rounded-md left-0 w-fit mx-auto right-0 z-50 h-fit flex flex-row items-center bg-gray-800/30 justify-center p-1 backdrop-blur-lg
           md:relative md:top-0 md:bottom-0 md:bg-transparent md:w-[60px] md:flex-col md:justify-start md:h-full md:border-r-[0.03px] md:border-neutral-800 md:rounded-none md:px-0">
           <header class="hidden md:flex mb-5">
-            <Tooltip as="span" title="Beacon">
-              <img src={beaconLogo} class="w-10 h-10 object-contain" />
+            <Tooltip as="span" title="Beacon" onClick={() => navigate("/") } class='cursor-pointer'>
+              <h1 class='text-blue-300'>B.</h1>
             </Tooltip>
           </header>
           <div class="w-full items-center flex flex-col">

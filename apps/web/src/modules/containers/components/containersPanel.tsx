@@ -47,19 +47,14 @@ function ComposeList(props: { composes: ComposeDTO[]; emptyIcon: string; emptyMe
                     {(c, index) => {
                       const [hexColor] = createBGColorGenerator(c.name);
                       const isActive = createMemo(() => isActiveRoute(`/containers/${c?.id}`));
+
                       return (
                         <li
                           onClick={() => navigate(`/containers/${c?.id}`, {
-                            state: {
-                              container: c,
-                              color: hexColor()
-                            }
+                            state: { container: c, color: hexColor() }
                           })}
-                          class={`p-2 cursor-pointer rounded-md
-                          ${index() < compose?.containers?.length! - 1 ?
-                              'my-1 border-b-[0.03px] border-neutral-700' : ''}
-                          ${isActive() ? 'bg-[#3B3B3B80]' : ''}`}>
-                          <div class='flex items-center justify-start gap-3'>
+                          class={`p-1 cursor-pointer ${index() < compose?.containers?.length! - 1 ? 'border-b-[0.03px] border-neutral-800' : ''}`}>
+                          <div class={`p-2 rounded-md flex items-center justify-start gap-3 ${isActive() ? 'bg-[#3B3B3B80]' : ''}`}>
                             <div class="h-8 w-8 rounded flex items-center justify-center"
                               style={{
                                 color: hexColor()
@@ -101,7 +96,7 @@ export default function ContainersSidebarPanel(props: any) {
     <div class="flex-1 h-full p-2">
       <div class="h-full">
         <div class='border-b-[0.03px] border-neutral-800 pb-2 flex items-center justify-between'>
-          <span class="text-xl">
+          <span class="text-md">
             {props.label ?? ""}
           </span>
         </div>

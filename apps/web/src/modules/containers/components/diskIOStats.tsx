@@ -5,6 +5,7 @@ const BAR_WIDTH = 3;
 const GAP = 5;
 export function DiskIOStats(props: any) {
   const [width, setWidth] = createSignal<number>(0);
+
   let observer: ResizeObserver | undefined;
 
   const parentElement = (el: HTMLDivElement) => {
@@ -17,6 +18,7 @@ export function DiskIOStats(props: any) {
   onCleanup(() => observer?.disconnect());
   const bufferSize = createMemo(() => Math.max(1, Math.floor((width() + GAP) / (BAR_WIDTH + GAP))));
 
+  // Show the read and write bars
   const displayBars = createMemo(() => {
     const cap = bufferSize();
     const list = props.stats || [];
@@ -35,12 +37,44 @@ export function DiskIOStats(props: any) {
       .map((item: any) => item?.disk ?? null);
   });
 
-  const maxRead = createMemo(() => {
+  // Get the max total from the stream data
+  const maxTotal = createMemo(() => {
     const values = displayBars()
-      .map((item: any) => item?.read ?? 0)
-      .filter((value: number) => Number.isFinite(value));
+      .filter(Boolean)
+      .map((item: any) => {
+        const read = Number(item?.read ?? 0);
+        const write = Number(item?.write ?? 0);
+
+        return read + write;
+      });
 
     return Math.max(...values, 0);
+  });
+
+  // Format the disk usage rate
+  const formatRate = (bytesPerSecond: number) => {
+    if (!bytesPerSecond || bytesPerSecond <= 0) return "0 B/s";
+
+    const kb = bytesPerSecond / 1024;
+    if (kb < 1) return `${bytesPerSecond.toFixed(0)} B/s`;
+
+    const mb = kb / 1024;
+    if (mb < 1) return `${kb.toFixed(1)} KB/s`;
+
+    const gb = mb / 1024;
+    if (gb < 1) return `${mb.toFixed(1)} MB/s`;
+
+    return `${gb.toFixed(2)} GB/s`;
+  };
+
+  // Show current disk usage
+  const currentDisk = createMemo(() => {
+    const list = props.stats;
+
+    return list.at(-1)?.disk ?? {
+      read: 0,
+      write: 0
+    };
   });
 
   return (
@@ -50,6 +84,14 @@ export function DiskIOStats(props: any) {
           <DiskIOIcons size={14} color='#E56641' />
           <span class="text-md font-medium">Disk</span>
         </div>
+        <div class="flex items-center gap-4">
+          <span class='text-gray-500'>
+            <span class='text-green-500'>↑ </span>{formatRate(currentDisk().read)}
+          </span>
+          <span class='text-gray-500'>
+            <span class='text-red-400'>↓ </span>{formatRate(currentDisk().write)}
+          </span>
+        </div>
       </div>
       <div
         ref={parentElement}
@@ -57,19 +99,35 @@ export function DiskIOStats(props: any) {
         style={{ gap: `${GAP}px` }}>
         <For each={displayBars()}>
           {(val) => {
-            const read = val?.read ?? 0;
-            const max = maxRead();
-            const heightFactor = max > 0 ? read / max : 0.05;
+            const read = Number(val?.read ?? 0);
+            const write = Number(val?.write ?? 0);
+            const total = read + write;
+            const max = maxTotal();
+            const totalHeight = max > 0 ? (total / max) * 100 : 0;
+            const readHeight = total > 0 ? (read / total) * totalHeight : 1;
+            const writeHeight = total > 0 ? (write / total) * totalHeight : 1;
 
             return (
               <div
-                class="bg-[#E56641] origin-bottom rounded-xs shrink-0 transition-transform duration-300"
+                class="flex h-full shrink-0 flex-col justify-end"
                 style={{
                   width: `${BAR_WIDTH}px`,
-                  height: "100%",
-                  transform: `scaleY(${heightFactor})`,
-                }}
-              />
+                }}>
+                <div
+                  class="w-full"
+                  style={{
+                    height: `${writeHeight}%`,
+                    "background-color": "#E56641",
+                  }}
+                />
+                <div
+                  class="w-full"
+                  style={{
+                    height: `${readHeight}%`,
+                    "background-color": "#F4D35E",
+                  }}
+                />
+              </div>
             );
           }}
         </For>
