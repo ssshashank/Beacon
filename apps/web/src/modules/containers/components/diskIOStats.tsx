@@ -1,8 +1,8 @@
 import { createMemo, createSignal, For, onCleanup } from "solid-js";
 import { DiskIOIcons } from "../../../global/components/_icons/diskIO";
+import { formatRate, formatStreamByte } from "../mapper";
+import { BAR_WIDTH, GAP } from "../constant";
 
-const BAR_WIDTH = 3;
-const GAP = 5;
 export function DiskIOStats(props: any) {
   const [width, setWidth] = createSignal<number>(0);
 
@@ -51,22 +51,6 @@ export function DiskIOStats(props: any) {
     return Math.max(...values, 0);
   });
 
-  // Format the disk usage rate
-  const formatRate = (bytesPerSecond: number) => {
-    if (!bytesPerSecond || bytesPerSecond <= 0) return "0 B/s";
-
-    const kb = bytesPerSecond / 1024;
-    if (kb < 1) return `${bytesPerSecond.toFixed(0)} B/s`;
-
-    const mb = kb / 1024;
-    if (mb < 1) return `${kb.toFixed(1)} KB/s`;
-
-    const gb = mb / 1024;
-    if (gb < 1) return `${mb.toFixed(1)} MB/s`;
-
-    return `${gb.toFixed(2)} GB/s`;
-  };
-
   // Show current disk usage
   const currentDisk = createMemo(() => {
     const list = props.stats;
@@ -79,52 +63,48 @@ export function DiskIOStats(props: any) {
 
   return (
     <div class='h-fit rounded bg-[#151619] p-3'>
-      <div class='flex items-start justify-between gap-3 border-b-[0.03px] pb-3 border-neutral-700'>
+      <div class='flex items-start justify-between gap-3'>
         <div class='flex items-center justify-between gap-3'>
-          <DiskIOIcons size={14} color='#E56641' />
+          <DiskIOIcons size={14} color='#FF788D' />
           <span class="text-md font-medium">Disk</span>
         </div>
-        <div class="flex items-center gap-4">
-          <span class='text-gray-500'>
-            <span class='text-green-500'>↑ </span>{formatRate(currentDisk().read)}
-          </span>
-          <span class='text-gray-500'>
-            <span class='text-red-400'>↓ </span>{formatRate(currentDisk().write)}
-          </span>
+      </div>
+      <div class='flex items-center justify-between pt-5 flex-wrap gap-y-2'>
+        <div class='flex items-center gap-2 flex-wrap'>
+          <div class='px-3 py-0.5  w-fit rounded-md  flex items-center gap-2 bg-gray-500/20 flex-wrap'>
+            <p class='text-gray-500'>Read : </p> {formatRate(currentDisk()?.read)}
+          </div>
+          <div class='px-3 py-0.5  bg-gray-500/20 w-fit rounded-md flex items-center gap-2 flex-wrap'>
+            <p class='text-gray-500'>Write:</p> {formatRate(currentDisk()?.write)}
+          </div>
         </div>
       </div>
       <div
         ref={parentElement}
-        class="flex w-full items-end h-20 mt-3 overflow-hidden"
+        class="flex w-full items-end h-20 mt-10 overflow-hidden"
         style={{ gap: `${GAP}px` }}>
         <For each={displayBars()}>
           {(val) => {
-            const read = Number(val?.read ?? 0);
-            const write = Number(val?.write ?? 0);
-            const total = read + write;
-            const max = maxTotal();
-            const totalHeight = max > 0 ? (total / max) * 100 : 0;
-            const readHeight = total > 0 ? (read / total) * totalHeight : 3;
-            const writeHeight = total > 0 ? (write / total) * totalHeight : 3;
+            const read = Number.isNaN(val?.read) ? 1 : (val?.read > 0 ? formatStreamByte(val?.read) : 1);
+            const write = Number.isNaN(val?.write) ? 1 : (val?.write > 0 ? formatStreamByte(val?.write) : 1);
 
             return (
-              <div
-                class="flex h-full shrink-0 flex-col justify-end transition-all origin-bottom"
+              <div class="flex h-full shrink-0 flex-col justify-end transition-all origin-bottom"
                 style={{
                   width: `${BAR_WIDTH}px`,
                 }}>
                 <div
                   class="w-full"
                   style={{
-                    height: `${writeHeight}%`,
-                    "background-color": "#E56641",
+                    height: `${read}px`,
+                    "background-color": "#3BA2FA",
                   }}
                 />
                 <div
                   class="w-full"
                   style={{
-                    height: `${readHeight}%`,
-                    "background-color": "#F4D35E",
+                    height: `${write}px`,
+                    "background-color": "#FF788D",
                   }}
                 />
               </div>
