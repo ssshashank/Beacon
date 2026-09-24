@@ -63,7 +63,7 @@ export function formatMemoryStats(data: any) {
     availableMemory,
     memoryUsage,
     usedMemory,
-    memoryUsagePercentage: Math.max(0, Math.min(Number.isFinite(memoryUsagePercentage) ? memoryUsagePercentage : 0, 100))
+    memoryUsagePercentage: Number.isFinite(memoryUsagePercentage) ? memoryUsagePercentage : 0
   };
 };
 
@@ -126,7 +126,7 @@ export function formatNetworkStats(data: any) {
 };
 
 // Disk io stats Formatter
-export function formatDiskIOStats( data: any, previous?: { read: number; write: number; time: number; } ) {
+export function formatDiskIOStats(data: any, previous?: { read: number; write: number; time: number; }) {
   const current = getDiskCounters(data);
   const time = new Date(data.read).getTime();
 
@@ -187,3 +187,49 @@ function getDiskCounters(data: any) {
 
   return { read, write };
 }
+
+export function formatRate(bytesPerSecond: number) {
+  if (!bytesPerSecond || bytesPerSecond <= 0) return "0 B/s";
+
+  const kb = bytesPerSecond / 1024;
+  if (kb < 1) return `${bytesPerSecond.toFixed(0)} B/s`;
+
+  const mb = kb / 1024;
+  if (mb < 1) return `${kb.toFixed(1)} KB/s`;
+
+  const gb = mb / 1024;
+  if (gb < 1) return `${mb.toFixed(1)} MB/s`;
+
+  return `${gb.toFixed(2)} GB/s`;
+};
+
+export function formatBytes(bytes: number) {
+  if (!bytes || bytes <= 0) return "0 B";
+
+  const kb = bytes / 1024;
+  if (kb < 1) return `${bytes.toFixed(0)} B`;
+
+  const mb = kb / 1024;
+  if (mb < 1) return `${kb.toFixed(1)} KB`;
+
+  const gb = mb / 1024;
+  if (gb < 1) return `${mb.toFixed(1)} MB`;
+
+  return `${gb.toFixed(2)} GB`;
+};
+
+
+export function formatStreamByte(bytes: number) {
+  if (!bytes || bytes <= 0) return 0;
+
+  const kb = bytes / 1024;
+  if (kb < 1) return bytes.toFixed(0);
+
+  const mb = kb / 1024;
+  if (mb < 1) return kb.toFixed(1);
+
+  const gb = mb / 1024;
+  if (gb < 1) return mb.toFixed(1);
+
+  return gb.toFixed(2);
+};
