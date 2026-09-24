@@ -80,7 +80,7 @@ export default function ContainerStats(props: any) {
   );
 
   return (
-    <div class="rounded-md bg-[#0A0A0B] h-full">
+    <div class="rounded-md bg-[#0A0A0B] h-full overflow-y-auto">
       <div class="p-1 grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-2 gap-y-2 items-start">
         <div class='grid gap-y-2'>
           <Loading fallback={<h1>CPU Stats loading...</h1>}>

@@ -21,3 +21,6 @@ export const ComposeStatus ={
   EXITED: 'exited',
   PAUSED: 'paused'
 };
+
+export const BAR_WIDTH = 3;
+export const GAP = 5;
