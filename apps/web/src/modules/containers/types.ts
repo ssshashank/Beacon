@@ -33,5 +33,8 @@ export interface StatPoint {
     read: number;
     write: number;
   };
-  pids?: number;
+  pids?: {
+    currentPId: number;
+    limit: number;
+  };
 };
