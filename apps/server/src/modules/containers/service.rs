@@ -1,5 +1,5 @@
 use crate::global::{
-    config::{self, HOST},
+    config::{DOCKER_API_VERSION, HOST},
     docker::DockerEndpoints,
     utils,
 };
@@ -39,9 +39,7 @@ impl ContainerService {
     pub async fn stream_container_logs(&self, id: &str) -> FutureImpl {
         let url = format!(
             "http://{}/{}/containers/{}/logs?stdout=1&stderr=1&timestamp=1&follow=1",
-            *HOST,
-            config::APP_VERSION,
-            id
+            *HOST, *DOCKER_API_VERSION, id
         );
 
         let client = self.client.clone();
@@ -76,9 +74,7 @@ impl ContainerService {
     pub async fn stream_container_resource_usage(&self, id: &str) -> FutureImpl {
         let url = format!(
             "http://{}/{}/containers/{}/stats",
-            *HOST,
-            config::APP_VERSION,
-            id
+            *HOST, *DOCKER_API_VERSION, id
         );
 
         let client = self.client.clone();

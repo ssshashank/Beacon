@@ -1,5 +1,5 @@
 use crate::global::{
-    config::{self, HOST},
+    config::{DOCKER_API_VERSION, HOST},
     docker::DockerEndpoints,
 };
 use axum::response::sse::Event;
@@ -21,7 +21,7 @@ impl EventService {
         let url = format!(
             "http://{}/{}{}",
             *HOST,
-            config::APP_VERSION,
+            *DOCKER_API_VERSION,
             DockerEndpoints::STREAM_EVENTS
         );
         let client = self.client.clone();
