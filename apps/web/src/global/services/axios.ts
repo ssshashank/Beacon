@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { HTTPStatusCode } from '../constants/network';
+import { BASE_URL, HTTPStatusCode } from '../constants/network';
 
 declare module 'axios' {
   export interface AxiosRequestConfig {
@@ -9,7 +9,7 @@ declare module 'axios' {
 }
 
 const AxiosAPI = axios.create({
-  baseURL: "http://100.65.87.119:8000/api/v1",
+  baseURL: BASE_URL,
   timeout: 15000,
   withCredentials: true,
   headers: {
@@ -26,10 +26,10 @@ AxiosAPI.interceptors.request.use((config) => {
   }
 
   // @ts-ignore:
-  if (!config?.skipAuth) {
-    // const token: string = useGlobalStore.getState().userDetails?.token as string;
-    // if (token) config.headers['Authorization'] = token;
-  }
+  // if (!config?.skipAuth) {
+  //   // const token: string = useGlobalStore.getState().userDetails?.token as string;
+  //   // if (token) config.headers['Authorization'] = token;
+  // }
 
   return config;
 }, (error) => Promise.reject(error));

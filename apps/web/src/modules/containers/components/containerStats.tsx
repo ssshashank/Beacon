@@ -1,5 +1,4 @@
 import { createEffect, createSignal, Loading } from "solid-js";
-import { BASE_URL } from "../../../global/constants/network";
 import { StatPoint } from "../types";
 import { CPUStats } from "./cpuStats";
 import { MemoryStats } from "./memoryStats";
@@ -7,6 +6,7 @@ import { formatCPUStats, formatDiskIOStats, formatMemoryStats, formatNetworkStat
 import { NetworkStats } from "./networkStats";
 import { DiskIOStats } from "./diskIOStats";
 import { PIdStats } from "./pidStats";
+import { BASE_URL } from "../../../global/constants/network";
 
 export default function ContainerStats(props: any) {
   const [stats, setStats] = createSignal<StatPoint[]>([]);
