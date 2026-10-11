@@ -1,7 +1,10 @@
-use crate::global::{
-    config::{DOCKER_API_VERSION, HOST},
-    docker::DockerEndpoints,
-    utils,
+use crate::{
+    global::{
+        config::{DOCKER_API_VERSION, HOST},
+        docker::DockerEndpoints,
+        utils,
+    },
+    modules::containers::dto::Container,
 };
 use axum::response::sse::Event;
 use futures_util::{StreamExt, stream::BoxStream};
@@ -19,12 +22,44 @@ impl ContainerService {
         Self { client }
     }
 
-    pub async fn get_all_containers(&self) -> Result<Value, Box<dyn Error>> {
-        utils::call_end_points(&self.client, DockerEndpoints::LIST_CONTAINERS, None).await
+    pub async fn get_all_containers(&self) -> Result<Vec<Container>, Box<dyn std::error::Error>> {
+        let url = format!(
+            "http://{}/{}{}",
+            *HOST,
+            *DOCKER_API_VERSION,
+            DockerEndpoints::LIST_CONTAINERS
+        );
+
+        let res = self.client.get(url).send().await?;
+        let json: Value = res.json().await?;
+
+        // check if json is array
+        let json_as_array = json
+            .as_array()
+            .ok_or_else(|| "Expected Docker response to be an array")?;
+
+        // deserialize into container vector
+        let containers: Vec<Container> = json_as_array
+            .iter()
+            .map(|item| Container::from_json(item))
+            .collect();
+
+        // serialize the json array
+        Ok(containers)
     }
 
-    pub async fn inspect_container(&self, id: &str) -> Result<Value, Box<dyn Error>> {
-        utils::call_end_points(&self.client, DockerEndpoints::INSPECT_A_CONTAINER, Some(id)).await
+    pub async fn inspect_container(&self, id: &str) -> Result<Container, Box<dyn Error>> {
+        let endpoint = DockerEndpoints::INSPECT_A_CONTAINER.replace("{id}", id);
+        let url = format!("http://{}/{}{}", *HOST, *DOCKER_API_VERSION, endpoint);
+
+        let res = self.client.get(url).send().await?;
+        let json: Value = res.json().await?;
+        let _ = json
+            .as_object()
+            .ok_or_else(|| "Expected docker response must be in an object")?;
+
+        let container: Container = Container::from_json(&json);
+        Ok(container)
     }
 
     pub async fn list_containers_process(&self, id: &str) -> Result<Value, Box<dyn Error>> {

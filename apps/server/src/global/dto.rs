@@ -1,4 +1,6 @@
 use crate::global::types;
+use reqwest::StatusCode;
+use serde::Serialize;
 use std::collections::HashMap;
 
 pub struct HostServices {
@@ -17,6 +19,7 @@ pub struct ManagerStatus {
     pub leader: bool,
     pub reachability: types::ManagerReachability,
 }
+
 pub struct Nodes {
     pub id: String,
     pub hostname: String,
@@ -41,20 +44,48 @@ pub struct Host {
     pub swarm_id: String,
 }
 
-pub struct Container {
+pub struct Group {
     pub id: String,
-    pub host_id: String,
-    pub group_id: String,
-    pub image_id: String,
-    pub image: String,
     pub name: String,
-    pub up_status: String,
-    pub status: types::ContainerStatus,
-    pub volume: Option<String>,
-    pub label: HashMap<String, String>,
-    pub isolation: types::ContainerIsolation,
-    pub health: types::ContainerHealth,
-    pub created_at: tokio::time::Duration,
-    pub updated_at: tokio::time::Duration,
-    pub deleted_at: Option<tokio::time::Duration>,
+    pub r#type: String,
+}
+
+#[derive(Serialize, Debug)]
+pub struct ApiError {
+    pub code: String,
+    pub message: String,
+}
+
+#[derive(Serialize, Debug)]
+pub struct ResponseBody<T> {
+    pub status: u16,
+    pub success: bool,
+    pub body: Option<T>,
+    pub error: Option<ApiError>,
+}
+
+impl<T> ResponseBody<T>
+where
+    T: Serialize,
+{
+    pub fn success(status: StatusCode, body: T) -> Self {
+        ResponseBody {
+            status: status.as_u16(),
+            success: true,
+            body: Some(body),
+            error: None,
+        }
+    }
+
+    pub fn error(status: StatusCode, code: impl Into<String>, message: impl Into<String>) -> Self {
+        ResponseBody {
+            status: status.as_u16(),
+            success: false,
+            body: None,
+            error: Some(ApiError {
+                code: code.into(),
+                message: message.into(),
+            }),
+        }
+    }
 }

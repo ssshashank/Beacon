@@ -1,3 +1,5 @@
+use serde::Serialize;
+
 pub enum Environment {
     Development,
     Production,
@@ -34,6 +36,8 @@ pub enum ManagerReachability {
     Unknown,
 }
 
+#[derive(Debug, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
 pub enum ContainerStatus {
     Running,
     Created,
@@ -42,6 +46,8 @@ pub enum ContainerStatus {
     Paused,
     Exited,
     Dead,
+    #[serde(other)]
+    Unknown,
 }
 
 pub enum ContainerIsolation {
@@ -55,4 +61,14 @@ pub enum ContainerHealth {
     Healthy,
     Unhealthy,
     None,
+}
+
+pub enum ImageStatus {
+    Unspecified,
+    Pending,
+    WaitingForPush,
+    Preparing,
+    Completed,
+    Failed,
+    Deleted,
 }

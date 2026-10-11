@@ -1,4 +1,9 @@
-use crate::modules::containers::{constant::ContainerRoutesName, controller::ContainerController};
+use crate::{
+    global::dto::ResponseBody,
+    modules::containers::{
+        constant::ContainerRoutesName, controller::ContainerController, dto::Container,
+    },
+};
 use axum::{
     Json, Router,
     extract::{Path, State},
@@ -41,14 +46,16 @@ pub fn routes(controller: Arc<ContainerController>) -> Router {
         .with_state(controller)
 }
 
-async fn get_all_containers(State(controller): State<Arc<ContainerController>>) -> Json<Value> {
+async fn get_all_containers(
+    State(controller): State<Arc<ContainerController>>,
+) -> Json<ResponseBody<Vec<Container>>> {
     controller.get_all_containers().await
 }
 
 async fn inspect_container(
     State(controller): State<Arc<ContainerController>>,
     Path(id): Path<String>,
-) -> Json<Value> {
+) -> Json<ResponseBody<Container>> {
     controller.inspect_container(&id).await
 }
 

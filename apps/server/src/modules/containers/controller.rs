@@ -1,6 +1,9 @@
+use crate::global::dto::ResponseBody;
+use crate::modules::containers::dto::Container;
 use crate::modules::containers::service::ContainerService;
 use axum::Json;
 use axum::response::{Sse, sse::Event};
+use reqwest::StatusCode;
 use serde_json::Value;
 use std::convert::Infallible;
 
@@ -15,22 +18,27 @@ impl ContainerController {
         }
     }
 
-    pub async fn get_all_containers(&self) -> Json<Value> {
+    pub async fn get_all_containers(&self) -> Json<ResponseBody<Vec<Container>>> {
         match self.service.get_all_containers().await {
-            Ok(json) => Json(json),
-            Err(e) => {
-                eprintln!("Error talking to Docker socket: {e}");
-                Json(Value::Array(vec![]))
-            }
+            Ok(container) => Json(ResponseBody::success(StatusCode::OK, container)),
+            Err(_) => Json(ResponseBody::error(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "CONTAINER_NOT_FOUND",
+                "list of containers not found",
+            )),
         }
     }
 
-    pub async fn inspect_container(&self, id: &str) -> Json<Value> {
+    pub async fn inspect_container(&self, id: &str) -> Json<ResponseBody<Container>> {
         match self.service.inspect_container(id).await {
-            Ok(json) => Json(json),
+            Ok(container) => Json(ResponseBody::success(StatusCode::OK, container)),
             Err(e) => {
                 eprintln!("Error talking to Docker socket: {e}");
-                Json(Value::Array(vec![]))
+                Json(ResponseBody::error(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "CONTAINER_NOT_FOUND",
+                    "Container with this id not found.",
+                ))
             }
         }
     }

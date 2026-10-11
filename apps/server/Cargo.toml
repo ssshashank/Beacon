@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 axum = { version = "0.8.9", features = ["macros"] }
+chrono = { version = "0.4.45", features = ["serde"] }
 futures-util = "0.3"
 os = "0.1.0"
 reqwest = { version = "0.13.4", features = ["json", "stream"] }
