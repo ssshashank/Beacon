@@ -9,7 +9,7 @@ pub struct Image {
     pub tag: Option<String>,
     pub architecture: String,
     pub os: String,
-    pub local_digest: String,
+    pub local_digest: Option<String>,
     pub size: u64,
 }
 
@@ -21,7 +21,7 @@ impl Image {
             tag: Some(json["Tag"].as_str().unwrap_or("").to_string()),
             architecture: json["Architecture"].as_str().unwrap_or("").to_string(),
             os: json["Os"].as_str().unwrap_or("").to_string(),
-            local_digest: json["Digest"].as_str().unwrap().to_string(),
+            local_digest: Some(json["Digest"].as_str().unwrap().to_string()),
             size: json["Size"].as_u64().unwrap_or(0),
         };
     }
