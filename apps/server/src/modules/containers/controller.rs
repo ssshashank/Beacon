@@ -1,5 +1,5 @@
 use crate::global::dto::ResponseBody;
-use crate::modules::containers::dto::Container;
+use crate::modules::containers::dto::{Container, Process};
 use crate::modules::containers::service::ContainerService;
 use axum::Json;
 use axum::response::{Sse, sse::Event};
@@ -43,12 +43,19 @@ impl ContainerController {
         }
     }
 
-    pub async fn get_all_process_running_in_container(&self, id: &str) -> Json<Value> {
+    pub async fn get_all_process_running_in_container(
+        &self,
+        id: &str,
+    ) -> Json<ResponseBody<Vec<Process>>> {
         match self.service.list_containers_process(id).await {
-            Ok(json) => Json(json),
+            Ok(json) => Json(ResponseBody::success(StatusCode::OK, json)),
             Err(e) => {
                 eprintln!("Error talking to Docker socket: {e}");
-                Json(Value::Array(vec![]))
+                Json(ResponseBody::error(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "CONTAINER_NOT_FOUND",
+                    "Container with this id not found.",
+                ))
             }
         }
     }

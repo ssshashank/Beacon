@@ -4,11 +4,14 @@ use crate::{
         docker::DockerEndpoints,
         utils,
     },
-    modules::containers::dto::Container,
+    modules::containers::{
+        dto::{Container, Process},
+        mapper::{inspect_container_mapper, list_container_mapper},
+    },
 };
 use axum::response::sse::Event;
 use futures_util::{StreamExt, stream::BoxStream};
-use serde_json::Value;
+use serde_json::{Value, json};
 use std::convert::Infallible;
 use std::error::Error;
 
@@ -22,7 +25,9 @@ impl ContainerService {
         Self { client }
     }
 
+    // Get all containers service
     pub async fn get_all_containers(&self) -> Result<Vec<Container>, Box<dyn std::error::Error>> {
+        // format the docker api endpoints
         let url = format!(
             "http://{}/{}{}",
             *HOST,
@@ -41,14 +46,19 @@ impl ContainerService {
         // deserialize into container vector
         let containers: Vec<Container> = json_as_array
             .iter()
-            .map(|item| Container::from_json(item))
+            .map(|item| {
+                let map_response = list_container_mapper(&item);
+                Container::from_json(&map_response)
+            })
             .collect();
 
         // serialize the json array
         Ok(containers)
     }
 
+    // Inspect a container service
     pub async fn inspect_container(&self, id: &str) -> Result<Container, Box<dyn Error>> {
+        // format the docker api endpoints
         let endpoint = DockerEndpoints::INSPECT_A_CONTAINER.replace("{id}", id);
         let url = format!("http://{}/{}{}", *HOST, *DOCKER_API_VERSION, endpoint);
 
@@ -58,17 +68,47 @@ impl ContainerService {
             .as_object()
             .ok_or_else(|| "Expected docker response must be in an object")?;
 
-        let container: Container = Container::from_json(&json);
+        // map the container data
+        let mapped_response = inspect_container_mapper(&json);
+        let container: Container = Container::from_json(&mapped_response);
         Ok(container)
     }
 
-    pub async fn list_containers_process(&self, id: &str) -> Result<Value, Box<dyn Error>> {
-        utils::call_end_points(
-            &self.client,
-            DockerEndpoints::LIST_PROCESS_RUNNING_IN_A_CONTAINER,
-            Some(id),
-        )
-        .await
+    pub async fn list_containers_process(&self, id: &str) -> Result<Vec<Process>, Box<dyn Error>> {
+        // format the docker api endpoints
+        let endpoint = DockerEndpoints::LIST_PROCESS_RUNNING_IN_A_CONTAINER.replace("{id}", id);
+        let url = format!("http://{}/{}{}", *HOST, *DOCKER_API_VERSION, endpoint);
+
+        let res = self.client.get(url).send().await?;
+        let json: Value = res.json().await?;
+        let json_as_array = json["Processes"]
+            .as_array()
+            .ok_or_else(|| "Expected docker response must be an array")?;
+
+        let process_list: Vec<Process> = json_as_array
+            .iter()
+            .filter_map(|item| {
+                let arr = item.as_array()?;
+                if let [uid, pid, ppid, c, stime, tty, time, cmd] = arr.as_slice() {
+                    let mapped_value = json!({
+                        "uid": uid.as_str().unwrap_or(""),
+                        "pid": pid.as_str().unwrap_or(""),
+                        "ppid": ppid.as_str().unwrap_or(""),
+                        "cpu": c.as_str().unwrap_or(""),
+                        "start_time": stime.as_str().unwrap_or(""),
+                        "tty": tty.as_str().unwrap_or(""),
+                        "time": time.as_str().unwrap_or(""),
+                        "command": cmd.as_str().unwrap_or("")
+                    });
+
+                    Some(Process::from_json(&mapped_value))
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        Ok(process_list)
     }
 
     pub async fn stream_container_logs(&self, id: &str) -> FutureImpl {

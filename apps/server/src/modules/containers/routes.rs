@@ -1,7 +1,9 @@
 use crate::{
     global::dto::ResponseBody,
     modules::containers::{
-        constant::ContainerRoutesName, controller::ContainerController, dto::Container,
+        constant::ContainerRoutesName,
+        controller::ContainerController,
+        dto::{Container, Process},
     },
 };
 use axum::{
@@ -62,7 +64,7 @@ async fn inspect_container(
 async fn get_all_process_running_in_container_by_id(
     State(controller): State<Arc<ContainerController>>,
     Path(id): Path<String>,
-) -> Json<Value> {
+) -> Json<ResponseBody<Vec<Process>>> {
     controller.get_all_process_running_in_container(&id).await
 }
 
