@@ -1,29 +1,29 @@
-import type { ComposeDTO, } from "./types";
+import type { ComposeDTO, ContainerDetailDTO } from "./types";
 
-export const formatContainerData = (rawData: any): ComposeDTO[] => {
+export const formatContainerData = (containers: ContainerDetailDTO[]): ComposeDTO[] => {
   const composeMap = new Map<string, ComposeDTO>();
 
-  for (const d of rawData ?? []) {
-    const project = d?.Labels?.["com.docker.compose.project"] || d?.Labels?.["org.opencontainers.image.title"];
+  for (const d of containers ?? []) {
+    const project = d?.label?.["com.docker.compose.project"] || d?.label?.["org.opencontainers.image.title"];
     if (!project) continue;
 
     if (!composeMap.has(project)) {
       composeMap.set(project, {
-        id: d?.Labels?.["com.docker.compose.config-hash"] || d?.Labels?.["org.opencontainers.image.revision"],
+        id: d?.label?.["com.docker.compose.config-hash"] || d?.label?.["org.opencontainers.image.revision"],
         label: project,
-        version: d?.Labels?.["com.docker.compose.version"] || d?.Labels?.["org.opencontainers.image.version"],
+        version: d?.label?.["com.docker.compose.version"] || d?.label?.["org.opencontainers.image.version"],
         containers: [],
-        status: d?.State
+        status: d?.status
       });
     }
 
     // Push containers
     composeMap.get(project)?.containers?.push({
-      id: d?.Id,
-      name: d?.Names?.[0]?.replace("/", ""),
-      image: d?.Image,
-      status: d?.State,
-      labels: d?.Labels
+      id: d?.id,
+      name: d?.name?.replace("/", ""),
+      image: d?.image?.name,
+      status: d?.status,
+      labels: d?.label
     });
   }
 

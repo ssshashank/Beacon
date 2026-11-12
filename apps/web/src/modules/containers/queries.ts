@@ -1,21 +1,22 @@
 import { query } from "@solidjs/router";
 import ContainerAPI from "./api";
 import { formatContainerData } from "./mapper";
-import { ComposeDTO } from "./types";
+import { ApiResponse, ComposeDTO, ContainerDetailDTO, ProcessDTO } from "./types";
 
 export const listContainersQuery = query(async (): Promise<ComposeDTO[]> => {
   const response = await ContainerAPI.listContainers();
-  return formatContainerData(response?.responseBody);
+  const body = (response?.responseBody as ApiResponse<ContainerDetailDTO[]>)?.body;
+  return formatContainerData(body ?? []);
 }, "listContainers");
 
-export const inspectContainerByIDQuery = query(async (id: string): Promise<any> => {
+export const inspectContainerByIDQuery = query(async (id: string): Promise<ContainerDetailDTO | null> => {
   const response = await ContainerAPI.inspectContainerByID(id);
-  return response.responseBody;
+  return (response?.responseBody as ApiResponse<ContainerDetailDTO>)?.body ?? null;
 }, 'inspectContainer');
 
-export const getAllProcessRunningInContainerQuery = query(async (id: string) => {
+export const getAllProcessRunningInContainerQuery = query(async (id: string): Promise<ProcessDTO[]> => {
   const response = await ContainerAPI.getAllProcessRunningInContainer(id);
-  return response?.responseBody;
+  return (response?.responseBody as ApiResponse<ProcessDTO[]>)?.body ?? [];
 }, 'allProcessRunning');
 
 export const getContainerLogsQuery = query(async (id: string): Promise<any> => {

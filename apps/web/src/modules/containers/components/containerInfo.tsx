@@ -7,7 +7,6 @@ import { PortsIcon } from "../../../global/components/_icons/ports";
 import { EjectIcon } from "../../../global/components/_icons/eject";
 
 function ContainerAbout(props: any) {
-  const networkDetail: any = () => Object.values(props.container().NetworkSettings.Networks ?? {})[0];
 
   return (
     <div class='h-fit rounded bg-[#151619] p-3'>
@@ -21,7 +20,7 @@ function ContainerAbout(props: any) {
             Name:
           </span>
           <span>
-            {props.container().Name}
+            {props.container()?.name}
           </span>
         </div>
         <div class='flex items-center justify-between py-1'>
@@ -29,7 +28,7 @@ function ContainerAbout(props: any) {
             ID:
           </span>
           <span class="truncate [direction:rtl] text-left max-w-[100px]">
-            &lrm;{props.container().Id}
+            &lrm;{props.container()?.id}
           </span>
         </div>
         <div class='flex items-center justify-between py-1'>
@@ -37,48 +36,34 @@ function ContainerAbout(props: any) {
             Image:
           </span>
           <span>
-            {props.container().Config?.Image}
+            {truncateLabel("image", props.container()?.image?.name as string)}
           </span>
         </div>
         <div class='flex items-center justify-between py-1'>
           <span class='text-gray-400'>
-            Platform:
+            Command:
           </span>
-          <span>
-            {props.container().Platform}
-          </span>
-        </div>
-        <div class='flex items-center justify-between py-1'>
-          <span class='text-gray-400'>
-            Domain:
-          </span>
-          <span>
-            {networkDetail()?.DNSNames?.[0]!}
-          </span>
-        </div>
-        <div class='flex items-center justify-between py-1'>
-          <span class='text-gray-400'>
-            IP Address:
-          </span>
-          <span class='text-blue-500'>
-            {networkDetail()?.IPAddress ?? "-"}
+          <span class="truncate max-w-[150px]">
+            {props.container()?.command}
           </span>
         </div>
         <div class='flex items-center justify-between py-1'>
           <span class='text-gray-400'>
             State:
           </span>
-          <StatusLabel status={props.container()?.State?.Status} />
+          <StatusLabel status={props.container()?.status} />
         </div>
         <div class='flex items-center justify-between py-1'>
           <span class='text-gray-400'>
             Started At:
           </span>
           <span>
-            {new Date(props.container()?.State?.StartedAt).toLocaleString("en-IN", {
-              dateStyle: "medium",
-              timeStyle: "short",
-            })}
+            {props.container()?.up_status
+              ? new Date(props.container()?.up_status).toLocaleString("en-IN", {
+                dateStyle: "medium",
+                timeStyle: "short",
+              })
+              : "-"}
           </span>
         </div>
       </div>
@@ -95,11 +80,11 @@ function ContainerLabels(props: any) {
         <span class='text-md font-medium'>Labels</span>
       </div>
       <div class="text-gray-200 pt-2">
-        <For each={Object.entries(props.container().Config?.Labels ?? {})}>
+        <For each={Object.entries(props.container()?.label ?? {})}>
           {([key, value]) => (
-            <div class='flex items-center justify-between py-1'>
-              <span class='text-gray-400'>{key}</span>
-              <span>{truncateLabel(key, value as string)}</span>
+            <div class='flex items-start justify-between py-1 gap-2'>
+              <span class='text-gray-400 w-[50%]'>{truncateLabel(key, key as string)}</span>
+              <span class='w-[50%]' >{truncateLabel(key, value as string)}</span>
             </div>
           )}
         </For>
@@ -114,9 +99,11 @@ type PortBinding = {
 };
 
 type PortBindings = Record<string, PortBinding[]>;
+
 function ContainerPortForward(props: any) {
+
   const ports = createMemo(() => {
-    const portBindings = (props.container().HostConfig?.PortBindings ?? {}) as PortBindings;
+    const portBindings = (props.container()?.HostConfig?.PortBindings ?? {}) as PortBindings;
 
     const pb = Object.entries(portBindings).flatMap(
       ([containerPortWithProtocol, bindings]) => {
@@ -173,7 +160,7 @@ function ContainerMount(props: any) {
           <span>Sources</span>
           <span>Destination</span>
         </div>
-        <For each={props.container().Mounts}>
+        <For each={props.container()?.Mounts}>
           {(mount) => (
             <div class='flex items-center justify-between py-1'>
               <span class='text-blue-400'>{mount.Source}</span>
@@ -187,22 +174,42 @@ function ContainerMount(props: any) {
 }
 
 export default function ContainerInfo(props: any) {
+
   return (
     <div class="rounded-md bg-[#0A0A0B] h-full overflow-y-auto">
       <div class='p-1 grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-2 gap-y-2 items-start'>
         <div class='grid gap-y-2'>
-          <Loading fallback={<h1>About Loading...</h1>}>
+          <Loading
+            fallback={
+              <h1>
+                About Loading...
+              </h1>
+            }>
             <ContainerAbout container={props.container} />
           </Loading>
-          <Loading fallback={<h1>Port forward Loading...</h1>}>
+          <Loading
+            fallback={
+              <h1>
+                Port forward Loading...
+              </h1>
+            }>
             <ContainerPortForward container={props.container} />
           </Loading>
-          <Loading fallback={<h1>Mount Loading...</h1>}>
+          <Loading
+            fallback={
+              <h1>
+                Mount Loading...
+              </h1>
+            }>
             <ContainerMount container={props.container} />
           </Loading>
         </div>
         <div>
-          <Loading fallback={<h1>Labels loading...</h1>}>
+          <Loading
+            fallback={
+              <h1>Labels loading...
+              </h1>
+            }>
             <ContainerLabels container={props.container} />
           </Loading>
         </div>

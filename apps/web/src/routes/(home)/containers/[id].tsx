@@ -7,10 +7,13 @@ import Tooltip from "../../../global/components/_common/tooltip";
 import { inspectContainerByIDQuery } from "../../../modules/containers/queries";
 import { ContainerStatus } from "../../../modules/containers/constant";
 import ContainerNotFound from "../../../modules/containers/components/notFound";
+
+// Lazy initialization
 const LazyContainerInfo = lazy(() => import("../../../modules/containers/components/containerInfo"));
 const LazyContainerStats = lazy(() => import("../../../modules/containers/components/containerStats"));
 const LazyContainerLogs = lazy(() => import("../../../modules/containers/components/containerLogs"));
 const LazyContainerFiles = lazy(() => import("../../../modules/containers/components/containerFiles"));
+const LazyContainerProcesses = lazy(() => import("../../../modules/containers/components/containerProcesses"));
 
 export default function ContainerByIDScreen() {
   const params = useParams();
@@ -22,18 +25,18 @@ export default function ContainerByIDScreen() {
       <div class='border-b-[0.03px] border-neutral-700 pb-2 shrink-0'>
         <div>
           <div class='flex items-center justify-start gap-3'>
-            <StatusDot status={container()?.State?.Status} size={10} />
+            <StatusDot status={container()?.status!} size={10} />
             <div>
               <span style={{ color: location?.state?.color }} class='text-md'>
-                {location?.state?.container?.name}
+                {location?.state?.container?.name ?? container()?.name}
               </span>
               &nbsp;&nbsp;/&nbsp;&nbsp;
               <span class="text-gray-500">
-                {container().Config?.Image!}
+                {container()?.image?.name!}
               </span>
               <div class='flex items-center justify-start gap-3 cursor-pointer'>
                 <span class='text-xs text-gray-600'>
-                  {container()?.Id}
+                  {container()?.id}
                 </span>
                 <Tooltip as="span" title="copy">
                   <CopyIcon size={16} color="gray" />
@@ -46,8 +49,8 @@ export default function ContainerByIDScreen() {
       <div class='flex-1 min-h-0'>
         <div class="h-full flex flex-col">
           <Tabs defaultValue="info" >
-            <div class='w-100 shrink-0'>
-              <TabsList style="mt-3 bg-[#0A0A0B] p-1 rounded-md gap-1" indicatorStyle="bg-[#3B3B3B80]">
+            <div class='w-auto'>
+              <TabsList style="mt-1 bg-[#0A0A0B] p-1 rounded-md gap-1" indicatorStyle="bg-[#3B3B3B80]">
                 <TabsTrigger value="info" style="flex-1 flex flex-row items-center justify-center gap-3 text-center">
                   <span>Info</span>
                 </TabsTrigger>
@@ -59,6 +62,9 @@ export default function ContainerByIDScreen() {
                 </TabsTrigger>
                 <TabsTrigger value="files" style="flex-1 flex flex-row items-center justify-center gap-3 text-center">
                   <span>Files</span>
+                </TabsTrigger>
+                <TabsTrigger value="processes" style="flex-1 flex flex-row items-center justify-center gap-3 text-center">
+                  <span>Processes</span>
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -75,7 +81,7 @@ export default function ContainerByIDScreen() {
               </TabsContent>
               <TabsContent value="stats" class="h-full overflow-y-auto">
                 <Show
-                  when={container()?.State?.Status === ContainerStatus.RUNNING}
+                  when={container()?.status === ContainerStatus.RUNNING}
                   fallback={<ContainerNotFound />}>
                   <Loading
                     fallback={
@@ -89,7 +95,7 @@ export default function ContainerByIDScreen() {
               </TabsContent>
               <TabsContent value="logs" class="h-full overflow-y-auto">
                 <Show
-                  when={container()?.State?.Status === ContainerStatus.RUNNING}
+                  when={container()?.status === ContainerStatus.RUNNING}
                   fallback={<ContainerNotFound />}>
                   <Loading
                     fallback={
@@ -103,7 +109,7 @@ export default function ContainerByIDScreen() {
               </TabsContent>
               <TabsContent value="files" class="h-full overflow-y-auto">
                 <Show
-                  when={container()?.State?.Status === ContainerStatus.RUNNING}
+                  when={container()?.status === ContainerStatus.RUNNING}
                   fallback={<ContainerNotFound />}>
                   <Loading
                     fallback={
@@ -112,6 +118,20 @@ export default function ContainerByIDScreen() {
                       </div>
                     }>
                     <LazyContainerFiles />
+                  </Loading>
+                </Show>
+              </TabsContent>
+              <TabsContent value="processes" class="h-full overflow-y-auto">
+                <Show
+                  when={container()?.status === ContainerStatus.RUNNING}
+                  fallback={<ContainerNotFound />}>
+                  <Loading
+                    fallback={
+                      <div class="h-full flex items-center justify-center text-gray-500">
+                        Loading...
+                      </div>
+                    }>
+                    <LazyContainerProcesses params={params} />
                   </Loading>
                 </Show>
               </TabsContent>
