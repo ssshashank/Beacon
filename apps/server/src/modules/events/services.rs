@@ -1,38 +1,45 @@
+use crate::config::app::AppConfig;
 use crate::global::{
     config::{DOCKER_API_VERSION, HOST},
     docker::DockerEndpoints,
+    sse_broadcast,
 };
 use axum::response::sse::Event;
 use futures_util::{StreamExt, stream::BoxStream};
 use std::convert::Infallible;
+use tokio_stream::wrappers::BroadcastStream;
 
 pub struct EventService {
-    client: reqwest::Client,
+    app_config: AppConfig,
 }
 
 type FutureImpl = BoxStream<'static, Result<Event, Infallible>>;
 
 impl EventService {
-    pub fn new(client: reqwest::Client) -> Self {
-        Self { client }
-    }
-
-    pub async fn stream_events(&self) -> FutureImpl {
+    pub fn new(app_config: AppConfig) -> Self {
         let url = format!(
             "http://{}/{}{}",
             *HOST,
             *DOCKER_API_VERSION,
             DockerEndpoints::STREAM_EVENTS
         );
-        let client = self.client.clone();
-        let stream_fut = async move {
-            let response = client.get(url).send().await.unwrap();
-            response.bytes_stream().map(|chunk| {
-                let bytes = chunk.unwrap();
-                let data = String::from_utf8_lossy(&bytes).to_string();
-                Ok(Event::default().data(data))
-            })
-        };
-        futures_util::stream::once(stream_fut).flatten().boxed()
+
+        sse_broadcast::spawn_listener(
+            app_config.client.clone(),
+            app_config.event_tx.clone(),
+            app_config.shutdown.clone(),
+            url,
+        );
+
+        Self { app_config }
+    }
+
+    pub async fn stream_events(&self) -> FutureImpl {
+        let rx = self.app_config.event_tx.subscribe();
+        dbg!(" in stream events usgae");
+
+        BroadcastStream::new(rx)
+            .filter_map(|event| async move { event.ok().map(Ok) })
+            .boxed()
     }
 }

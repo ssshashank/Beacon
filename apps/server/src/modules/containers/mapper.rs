@@ -55,7 +55,7 @@ pub fn list_container_mapper(json: &Value) -> Value {
         "image_id": json["ImageID"],
         "image": image_res,
         "command": json["Command"],
-        "names": json["names"][0],
+        "names": json["Names"][0],
         "up_status": json["Status"],
         "status":json["State"],
         "labels": (&json["Labels"]),
@@ -75,6 +75,7 @@ pub fn inspect_container_mapper(json: &Value) -> Value {
         "deleted_at": null,
         "image_id": json["Image"],
         "image": image_res,
+        "tty": json["Config"]["Tty"],
         "command": json["Config"]["Entrypoint"]
             .as_array()
             .map(|arr| {
@@ -88,5 +89,18 @@ pub fn inspect_container_mapper(json: &Value) -> Value {
         "status":json["State"]["Status"],
         "labels": (&json["Config"]["Labels"]),
         "created_at": json["Created"],
+    })
+}
+
+pub fn container_process_mapper(arr: &Value) -> Value {
+    json!({
+        "uid": arr.get(0).and_then(Value::as_str).unwrap_or(""),
+        "pid": arr.get(1).and_then(Value::as_str).unwrap_or(""),
+        "ppid": arr.get(2).and_then(Value::as_str).unwrap_or(""),
+        "cpu": arr.get(3).and_then(Value::as_str).unwrap_or(""),
+        "start_time": arr.get(4).and_then(Value::as_str).unwrap_or(""),
+        "tty": arr.get(5).and_then(Value::as_str).unwrap_or(""),
+        "time": arr.get(6).and_then(Value::as_str).unwrap_or(""),
+        "command": arr.get(7).and_then(Value::as_str).unwrap_or("")
     })
 }

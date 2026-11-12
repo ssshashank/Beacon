@@ -1,4 +1,5 @@
 use crate::{
+    config::app::AppConfig,
     global::{
         config::{DOCKER_API_VERSION, HOST},
         docker::DockerEndpoints,
@@ -6,23 +7,26 @@ use crate::{
     },
     modules::containers::{
         dto::{Container, Process},
-        mapper::{inspect_container_mapper, list_container_mapper},
+        mapper::{container_process_mapper, inspect_container_mapper, list_container_mapper},
     },
 };
 use axum::response::sse::Event;
 use futures_util::{StreamExt, stream::BoxStream};
-use serde_json::{Value, json};
+use serde_json::Value;
 use std::convert::Infallible;
 use std::error::Error;
+use tokio_stream::wrappers::BroadcastStream;
 
-pub struct ContainerService {
-    client: reqwest::Client,
-}
+// Type alias
 type FutureImpl = BoxStream<'static, Result<Event, Infallible>>;
 
+pub struct ContainerService {
+    app_config: AppConfig,
+}
+
 impl ContainerService {
-    pub fn new(client: reqwest::Client) -> Self {
-        Self { client }
+    pub fn new(app_config: AppConfig) -> Self {
+        Self { app_config }
     }
 
     // Get all containers service
@@ -35,7 +39,7 @@ impl ContainerService {
             DockerEndpoints::LIST_CONTAINERS
         );
 
-        let res = self.client.get(url).send().await?;
+        let res = self.app_config.client.get(url).send().await?;
         let json: Value = res.json().await?;
 
         // check if json is array
@@ -62,7 +66,7 @@ impl ContainerService {
         let endpoint = DockerEndpoints::INSPECT_A_CONTAINER.replace("{id}", id);
         let url = format!("http://{}/{}{}", *HOST, *DOCKER_API_VERSION, endpoint);
 
-        let res = self.client.get(url).send().await?;
+        let res = self.app_config.client.get(url).send().await?;
         let json: Value = res.json().await?;
         let _ = json
             .as_object()
@@ -74,12 +78,13 @@ impl ContainerService {
         Ok(container)
     }
 
+    // List all container processes
     pub async fn list_containers_process(&self, id: &str) -> Result<Vec<Process>, Box<dyn Error>> {
         // format the docker api endpoints
         let endpoint = DockerEndpoints::LIST_PROCESS_RUNNING_IN_A_CONTAINER.replace("{id}", id);
         let url = format!("http://{}/{}{}", *HOST, *DOCKER_API_VERSION, endpoint);
 
-        let res = self.client.get(url).send().await?;
+        let res = self.app_config.client.get(url).send().await?;
         let json: Value = res.json().await?;
         let json_as_array = json["Processes"]
             .as_array()
@@ -87,24 +92,9 @@ impl ContainerService {
 
         let process_list: Vec<Process> = json_as_array
             .iter()
-            .filter_map(|item| {
-                let arr = item.as_array()?;
-                if let [uid, pid, ppid, c, stime, tty, time, cmd] = arr.as_slice() {
-                    let mapped_value = json!({
-                        "uid": uid.as_str().unwrap_or(""),
-                        "pid": pid.as_str().unwrap_or(""),
-                        "ppid": ppid.as_str().unwrap_or(""),
-                        "cpu": c.as_str().unwrap_or(""),
-                        "start_time": stime.as_str().unwrap_or(""),
-                        "tty": tty.as_str().unwrap_or(""),
-                        "time": time.as_str().unwrap_or(""),
-                        "command": cmd.as_str().unwrap_or("")
-                    });
-
-                    Some(Process::from_json(&mapped_value))
-                } else {
-                    None
-                }
+            .map(|item| {
+                let mapped_value = container_process_mapper(&item);
+                Process::from_json(&mapped_value)
             })
             .collect();
 
@@ -117,17 +107,16 @@ impl ContainerService {
             *HOST, *DOCKER_API_VERSION, id
         );
 
-        let client = self.client.clone();
+        let rx = self.app_config.container_logs.subscribe_or_spawn(
+            id,
+            self.app_config.client.clone(),
+            self.app_config.shutdown.clone(),
+            url,
+        );
 
-        let stream_fut = async move {
-            let response = client.get(url).send().await.unwrap();
-            response.bytes_stream().map(|chunk| {
-                let bytes = chunk.unwrap();
-                let data = String::from_utf8_lossy(&bytes).to_string();
-                Ok(Event::default().data(data))
-            })
-        };
-        futures_util::stream::once(stream_fut).flatten().boxed()
+        BroadcastStream::new(rx)
+            .filter_map(|event| async move { event.ok().map(Ok) })
+            .boxed()
     }
 
     pub async fn get_changes_on_container_file_system(
@@ -135,7 +124,7 @@ impl ContainerService {
         id: &str,
     ) -> Result<Value, Box<dyn Error>> {
         utils::call_end_points(
-            &self.client,
+            &self.app_config.client,
             DockerEndpoints::GET_CHANGES_ON_CONTAINER_FILE_SYSYTEM,
             Some(id),
         )
@@ -143,7 +132,12 @@ impl ContainerService {
     }
 
     pub async fn export_a_container(&self, id: &str) -> Result<Value, Box<dyn Error>> {
-        utils::call_end_points(&self.client, DockerEndpoints::EXPORT_A_CONTAINER, Some(id)).await
+        utils::call_end_points(
+            &self.app_config.client,
+            DockerEndpoints::EXPORT_A_CONTAINER,
+            Some(id),
+        )
+        .await
     }
 
     pub async fn stream_container_resource_usage(&self, id: &str) -> FutureImpl {
@@ -152,16 +146,17 @@ impl ContainerService {
             *HOST, *DOCKER_API_VERSION, id
         );
 
-        let client = self.client.clone();
+        dbg!(" in stream container resource usgae");
 
-        let stream_fut = async move {
-            let response = client.get(url).send().await.unwrap();
-            response.bytes_stream().map(|chunk| {
-                let bytes = chunk.unwrap();
-                let data = String::from_utf8_lossy(&bytes).to_string();
-                Ok(Event::default().data(data))
-            })
-        };
-        futures_util::stream::once(stream_fut).flatten().boxed()
+        let rx = self.app_config.container_stats.subscribe_or_spawn(
+            id,
+            self.app_config.client.clone(),
+            self.app_config.shutdown.clone(),
+            url,
+        );
+
+        BroadcastStream::new(rx)
+            .filter_map(|event| async move { event.ok().map(Ok) })
+            .boxed()
     }
 }

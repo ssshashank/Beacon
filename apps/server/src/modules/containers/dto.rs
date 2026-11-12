@@ -28,11 +28,11 @@ impl Process {
             user_type: json["uid"].as_str().unwrap_or("").to_string(),
             pid: json["pid"].as_str().unwrap_or("").to_string(),
             ppid: json["ppid"].as_str().unwrap_or("").to_string(),
-            cpu_utilization: json["c"].as_str().unwrap_or("").to_string(),
-            start_time: json["stime"].as_str().unwrap_or("").to_string(),
+            cpu_utilization: json["cpu"].as_str().unwrap_or("").to_string(),
+            start_time: json["start_time"].as_str().unwrap_or("").to_string(),
             teletypewriter: json["tty"].as_str().unwrap_or("").to_string(),
             cummulative_cpu_time: json["time"].as_str().unwrap_or("").to_string(),
-            cmd: json["cmd"].as_str().unwrap_or("").to_string(),
+            cmd: json["command"].as_str().unwrap_or("").to_string(),
         };
     }
 
@@ -59,6 +59,7 @@ pub struct Container {
     pub image_id: String,
     pub image: Image,
     pub name: String,
+    pub tty: bool,
     pub up_status: String,
     pub status: types::ContainerStatus,
     pub volume: Option<String>,
@@ -80,6 +81,7 @@ impl Container {
             image: Image::from_json(&json["image"]),
             command: json["command"].as_str().unwrap_or("").to_string(),
             name: json["names"].as_str().unwrap_or("").to_string(),
+            tty: json["tty"].as_bool().unwrap_or(true),
             up_status: json["up_status"].as_str().unwrap_or("").to_string(),
             status: map_container_status(&json["status"]),
             volume: json["volume"].as_str().map(String::from),
@@ -105,6 +107,7 @@ impl Container {
             "image_id": self.image_id,
             "name": self.name,
             "image": self.image.to_json(),
+            "tty": self.tty,
             "up_status": self.up_status,
             "status": self.status,
             "volume": self.volume,
