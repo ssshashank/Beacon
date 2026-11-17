@@ -28,22 +28,25 @@ export function CPUStats(props: any) {
     return list.slice(-cap).map((item: any) => item?.cpu?.current ?? 0);
   });
 
-  // current Disk computation
-  const currentDisk = createMemo(() => {
-    const list = props.stats;
-
+  // current CPU computation
+  const currentCPU = createMemo(() => {
+    const list = props.stats || [];
     return list.at(-1)?.cpu?.current ?? 0;
   });
 
   // peak CPU computation
   const peakCPU = createMemo(() => {
-    const values = props.stats;
+    const values = props.stats || [];
     if (!values.length) return 0;
-    return Math.max(...values.map((point: any) => point.cpu.current));
+    return Math.max(...values.map((point: any) => point?.cpu?.current ?? 0));
   });
 
   // avg CPU computation
-  const avgCPU = createMemo(() => props.stats.reduce((sum: number, point: any) => sum + point.cpu.current, 0) / props.stats.length);
+  const avgCPU = createMemo(() => {
+    const list = props.stats || [];
+    if (!list.length) return 0;
+    return list.reduce((sum: number, point: any) => sum + (point?.cpu?.current ?? 0), 0) / list.length;
+  });
 
   return (
     <div class='h-fit rounded bg-[#151619] p-3'>
@@ -54,14 +57,14 @@ export function CPUStats(props: any) {
         </div>
         <div>
           <span class='flex text-sm text-gray-500'>
-            <h3 class='text-xl text-gray-500'>{currentDisk()?.toFixed(2)}
+            <h3 class='text-xl text-gray-500'>{currentCPU()?.toFixed(2)}
             </h3>&nbsp;%
           </span>
         </div>
       </div>
       <div class='flex items-center justify-between pt-5 flex-wrap gap-y-2'>
         <div class='px-3 py-0.5  w-fit rounded-md  flex items-center gap-2 bg-gray-500/20 flex-wrap'>
-          <p class='text-gray-500'>Cores :</p> {props.cpuCores}
+          <p class='text-gray-500'>Cores :</p> {typeof props.cpuCores === "function" ? props.cpuCores() : props.cpuCores || 0}
         </div>
         <div class='flex items-center gap-2 flex-wrap'>
           <div class='px-3 py-0.5  w-fit rounded-md  flex items-center gap-2 bg-gray-500/20 flex-wrap'>

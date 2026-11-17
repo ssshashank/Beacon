@@ -19,11 +19,6 @@ export const getAllProcessRunningInContainerQuery = query(async (id: string): Pr
   return (response?.responseBody as ApiResponse<ProcessDTO[]>)?.body ?? [];
 }, 'allProcessRunning');
 
-export const getContainerLogsQuery = query(async (id: string): Promise<any> => {
-  const response = await ContainerAPI.getContainerLogsByID(id);
-  return response.responseBody;
-}, "containerLogs");
-
 export const getChangesOnFileSystemQuery = query(async (id: string): Promise<any> => {
   const response = await ContainerAPI.getChangesOnFileSystem(id);
   return response.responseBody;

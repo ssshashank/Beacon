@@ -34,7 +34,11 @@ export function PIdStats(props: any) {
           <span class='text-neutral-500'>
             Limit:
           </span>
-          <h3 class='text-2xl pt-2'>{currentPIDs()?.limit}</h3>
+          <h3 class='text-2xl pt-2'>
+            {currentPIDs()?.limit && currentPIDs()?.limit > 0
+              ? currentPIDs()?.limit
+              : "Unlimited"}
+          </h3>
         </div>
       </div>
     </div>

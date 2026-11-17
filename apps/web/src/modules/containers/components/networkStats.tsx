@@ -41,8 +41,8 @@ export function NetworkStats(props: any) {
     const values = displayBars()
       .filter(Boolean)
       .map((item: any) => {
-        const read = Number(item?.rxKBps ?? 0);
-        const write = Number(item?.txKBps ?? 0);
+        const read = Number(item?.rxRate ?? 0);
+        const write = Number(item?.txRate ?? 0);
 
         return read + write;
       });
@@ -55,8 +55,8 @@ export function NetworkStats(props: any) {
     const list = props.stats;
 
     return list.at(-1)?.network ?? {
-      rxKBps: 0,
-      txKBps: 0
+      rxRate: 0,
+      txRate: 0,
     };
   });
 
@@ -71,10 +71,10 @@ export function NetworkStats(props: any) {
       <div class='flex items-center justify-between pt-5 flex-wrap gap-y-2'>
         <div class='flex items-center gap-2 flex-wrap'>
           <div class='px-3 py-0.5  w-fit rounded-md  flex items-center gap-2 bg-gray-500/20 flex-wrap'>
-            <p class='text-gray-500'>Read: </p> {formatRate(currentNetwork()?.rxKBps)}
+            <p class='text-gray-500'>Read: </p> {formatRate(currentNetwork()?.rxRate)}
           </div>
           <div class='px-3 py-0.5  bg-gray-500/20 w-fit rounded-md flex items-center gap-2 flex-wrap'>
-            <p class='text-gray-500'>Write: </p> {formatRate(currentNetwork()?.txKBps)}
+            <p class='text-gray-500'>Write: </p> {formatRate(currentNetwork()?.txRate)}
           </div>
         </div>
       </div>
@@ -84,8 +84,8 @@ export function NetworkStats(props: any) {
         style={{ gap: `${GAP}px` }}>
         <For each={displayBars()}>
           {(val) => {
-            const read = Number.isNaN(val?.rxKBps) ? 1 : (val?.rxKBps> 0 ? formatStreamByte(val?.rxKBps) : 1);
-            const write = Number.isNaN(val?.txKBps) ? 1 : (val?.txKBps > 0 ? formatStreamByte(val?.txKBps) : 1);
+            const read = Number.isNaN(val?.rxRate) ? 1 : (val?.rxRate > 0 ? formatStreamByte(val?.rxRate) : 1);
+            const write = Number.isNaN(val?.txRate) ? 1 : (val?.txRate > 0 ? formatStreamByte(val?.txRate) : 1);
 
             return (
               <div class="flex h-full shrink-0 flex-col justify-end transition-all origin-bottom"

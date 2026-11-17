@@ -102,9 +102,10 @@ export function formatCPUStats(data: any) {
 }
 
 // Network Stats Formatter
-let prevRx = 0;
-let prevTx = 0;
-export function formatNetworkStats(data: any) {
+export function formatNetworkStats(
+  data: any,
+  previous?: { rx: number; tx: number; time: number }
+) {
   let rx = 0;
   let tx = 0;
   if (data?.networks) {
@@ -113,17 +114,29 @@ export function formatNetworkStats(data: any) {
       tx += iface?.tx_bytes ?? 0;
     }
   }
-  const rxKBps = prevRx > 0 ? (rx - prevRx) / 1024 : 0;
-  const txKBps = prevTx > 0 ? (tx - prevTx) / 1024 : 0;
 
-  prevRx = rx;
-  prevTx = tx;
+  const time = new Date(data.read).getTime();
+
+  if (!previous) {
+    return {
+      rxRate: 0,
+      txRate: 0,
+      rawRx: rx,
+      rawTx: tx,
+      time,
+    };
+  }
+
+  const elapsed = Math.max(0.001, (time - previous.time) / 1000);
 
   return {
-    rxKBps: Math.round(rxKBps),
-    txKBps: Math.round(txKBps)
+    rxRate: Math.max(0, (rx - previous.rx) / elapsed),
+    txRate: Math.max(0, (tx - previous.tx) / elapsed),
+    rawRx: rx,
+    rawTx: tx,
+    time,
   };
-};
+}
 
 // Disk io stats Formatter
 export function formatDiskIOStats(data: any, previous?: { read: number; write: number; time: number; }) {
@@ -165,7 +178,9 @@ function getDiskCounters(data: any) {
   let read = 0;
   let write = 0;
 
-  const entries = data?.blkio_stats?.io_service_bytes_recursive;
+  const entries =
+    data?.blkio_stats?.io_service_bytes_recursive ??
+    data?.blkio_stats?.io_serviced_recursive;
 
   if (!Array.isArray(entries)) {
     return { read: 0, write: 0 };

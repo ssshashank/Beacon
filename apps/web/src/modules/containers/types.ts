@@ -76,8 +76,8 @@ export interface StatPoint {
   cpu: {};
   memory?: {};
   network?: {
-    rxKBps: number;
-    txKBps: number;
+    rxRate: number;
+    txRate: number;
   };
   disk?: {
     read: number;
@@ -88,3 +88,8 @@ export interface StatPoint {
     limit: number;
   };
 };
+
+export interface ContainerLogsDTO {
+  stream: string;
+  message: string;
+}

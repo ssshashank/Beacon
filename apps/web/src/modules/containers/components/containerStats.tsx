@@ -15,71 +15,111 @@ export default function ContainerStats(props: any) {
   const [pidsLimit, setPidsLimit] = createSignal(0);
   const [isConnected, setIsConnected] = createSignal(false);
 
-  let previousDisk: | {
-    read: number;
-    write: number;
-    time: number;
-  } | undefined;
+  let previousDisk:
+    | {
+        read: number;
+        write: number;
+        time: number;
+      }
+    | undefined;
+
+  let previousNetwork:
+    | {
+        rx: number;
+        tx: number;
+        time: number;
+      }
+    | undefined;
 
   createEffect(
     () => props.params?.id,
     (id: string) => {
       if (!id) return;
+
+      // Reset stats and rate state on container change
+      setStats([]);
+      setIsConnected(false);
+      setCpuCores(0);
+      previousDisk = undefined;
+      previousNetwork = undefined;
+
+      let isDisposed = false;
       const es = new EventSource(`${BASE_URL}/containers/getContainerResourceUsageStatsById/${id}`);
-      es.onopen = () => setIsConnected(true);
+      es.onopen = () => {
+        if (!isDisposed) setIsConnected(true);
+      };
 
       es.onmessage = (event) => {
-        if (!event?.data) return;
+        if (isDisposed || !event?.data) return;
 
-        if (!isConnected()) return;
-        const data = JSON.parse(event.data);
-        const memoryStats = formatMemoryStats(data);
-        const cpuStats = formatCPUStats(data) as any;
-        const networkStats = formatNetworkStats(data);
-        const diskIOStats = formatDiskIOStats(data, previousDisk);
+        try {
+          const data = JSON.parse(event.data);
+          const memoryStats = formatMemoryStats(data);
+          const cpuStats = formatCPUStats(data) as any;
+          const networkStats = formatNetworkStats(data, previousNetwork);
+          const diskIOStats = formatDiskIOStats(data, previousDisk);
 
-        previousDisk = {
-          read: diskIOStats.rawRead,
-          write: diskIOStats.rawWrite,
-          time: diskIOStats.time,
-        };
+          previousDisk = {
+            read: diskIOStats.rawRead,
+            write: diskIOStats.rawWrite,
+            time: diskIOStats.time,
+          };
 
-        if (!cpuCores()) {
-          setCpuCores(cpuStats?.numberCpus);
-        }
-        setCurrentPids(data.pids_stats?.current ?? 0);
-        setPidsLimit(data.pids_stats?.limit ?? 0);
+          previousNetwork = {
+            rx: networkStats.rawRx,
+            tx: networkStats.rawTx,
+            time: networkStats.time,
+          };
 
-        const point: StatPoint = {
-          time: data.read,
-          cpu: {
-            current: Number.isFinite(cpuStats?.cpuPercentage) ? cpuStats?.cpuPercentage : 0,
-          },
-          memory: memoryStats,
-          network: networkStats,
-          disk: diskIOStats,
-          pids: {
-            currentPId: currentPids(),
-            limit: pidsLimit()
+          if (!cpuCores() && cpuStats?.numberCpus) {
+            setCpuCores(cpuStats.numberCpus);
           }
-        };
+          setCurrentPids(data.pids_stats?.current ?? 0);
+          setPidsLimit(data.pids_stats?.limit ?? 0);
 
-        setStats((prev) => {
-          const next = [...prev, point];
-          return next.length > 1000 ? next.slice(-1000) : next;
-        });
+          const point: StatPoint = {
+            time: data.read,
+            cpu: {
+              current: Number.isFinite(cpuStats?.cpuPercentage) ? cpuStats?.cpuPercentage : 0,
+            },
+            memory: memoryStats,
+            network: {
+              rxRate: networkStats.rxRate,
+              txRate: networkStats.txRate,
+            },
+            disk: diskIOStats,
+            pids: {
+              currentPId: currentPids(),
+              limit: pidsLimit(),
+            },
+          };
+
+          setStats((prev) => {
+            const next = [...prev, point];
+            return next.length > 1000 ? next.slice(-1000) : next;
+          });
+        } catch (err) {
+          console.error("Failed to parse container stats:", err);
+        }
       };
 
       es.onerror = () => {
         setIsConnected(false);
-        setStats([]);
         es.close();
       };
 
+      // Cleanup
       return () => {
+        isDisposed = true;
+        es.onmessage = null;
+        es.onerror = null;
+        es.onopen = null;
+        es.close();
         setIsConnected(false);
         setStats([]);
-        es.close();
+        setCpuCores(0);
+        previousDisk = undefined;
+        previousNetwork = undefined;
       };
     }
   );
@@ -89,12 +129,12 @@ export default function ContainerStats(props: any) {
       <div class="p-1 grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-2 gap-y-2 items-start">
         <div class='grid gap-y-2'>
           <Loading fallback={<h1>CPU Stats loading...</h1>}>
-            <CPUStats stats={stats()} cpuCores={cpuCores} />
+            <CPUStats stats={stats()} cpuCores={cpuCores()} />
           </Loading>
           <Loading fallback={<h1>Memory Stats loading...</h1>}>
             <MemoryStats stats={stats()} />
           </Loading>
-          <Loading fallback={<h1>Memory Stats loading...</h1>}>
+          <Loading fallback={<h1>PID Stats loading...</h1>}>
             <PIdStats stats={stats()} />
           </Loading>
         </div>
