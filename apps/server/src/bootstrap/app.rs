@@ -2,10 +2,9 @@ use crate::bootstrap::{modules, routes};
 use crate::client::docker;
 use crate::config::app::AppConfig;
 use crate::global::config::CORS_ORIGIN_ALLOWED_ENDPOINT;
-use crate::global::sse_broadcast::SseRegistry;
+use crate::global::event_bus::EventBus;
 use axum::Router;
 use axum::http::{HeaderValue, Method, header};
-use std::sync::Arc;
 use tokio::sync::broadcast;
 use tokio_util::sync::CancellationToken;
 use tower_http::cors::CorsLayer;
@@ -19,8 +18,7 @@ pub fn build_app() -> (Router, CancellationToken) {
         client: docker::build_docker_client(),
         event_tx: tx,
         shutdown: shutdown.clone(),
-        container_stats: Arc::new(SseRegistry::new()),
-        container_logs: Arc::new(SseRegistry::new()),
+        event_bus: EventBus::new(),
     };
 
     let modules = modules::init_modules(app);
