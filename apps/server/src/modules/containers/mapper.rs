@@ -92,15 +92,49 @@ pub fn inspect_container_mapper(json: &Value) -> Value {
     })
 }
 
-pub fn container_process_mapper(arr: &Value) -> Value {
+pub fn container_process_mapper(titles: &[String], arr: &Value) -> Value {
+    let get_col = |patterns: &[&str]| -> String {
+        for pattern in patterns {
+            if let Some(pos) = titles.iter().position(|t| t.eq_ignore_ascii_case(pattern)) {
+                if let Some(val) = arr.get(pos).and_then(Value::as_str) {
+                    return val.to_string();
+                }
+            }
+        }
+        "".to_string()
+    };
+
+    let user = get_col(&["UID", "USER"]);
+    let pid = get_col(&["PID"]);
+    let ppid = get_col(&["PPID"]);
+    let cpu = get_col(&["%CPU", "C", "CPU"]);
+    let start_time = get_col(&["STIME", "START"]);
+    let tty = get_col(&["TTY"]);
+    let time = get_col(&["TIME"]);
+    let cmd = get_col(&["CMD", "COMMAND"]);
+
+    // If titles didn't match (e.g. titles was empty), fallback to positional indexing if 8 cols
+    if cmd.is_empty() && arr.as_array().map_or(false, |a| a.len() == 8) {
+        return json!({
+            "uid": arr.get(0).and_then(Value::as_str).unwrap_or(""),
+            "pid": arr.get(1).and_then(Value::as_str).unwrap_or(""),
+            "ppid": arr.get(2).and_then(Value::as_str).unwrap_or(""),
+            "cpu": arr.get(3).and_then(Value::as_str).unwrap_or(""),
+            "start_time": arr.get(4).and_then(Value::as_str).unwrap_or(""),
+            "tty": arr.get(5).and_then(Value::as_str).unwrap_or(""),
+            "time": arr.get(6).and_then(Value::as_str).unwrap_or(""),
+            "command": arr.get(7).and_then(Value::as_str).unwrap_or("")
+        });
+    }
+
     json!({
-        "uid": arr.get(0).and_then(Value::as_str).unwrap_or(""),
-        "pid": arr.get(1).and_then(Value::as_str).unwrap_or(""),
-        "ppid": arr.get(2).and_then(Value::as_str).unwrap_or(""),
-        "cpu": arr.get(3).and_then(Value::as_str).unwrap_or(""),
-        "start_time": arr.get(4).and_then(Value::as_str).unwrap_or(""),
-        "tty": arr.get(5).and_then(Value::as_str).unwrap_or(""),
-        "time": arr.get(6).and_then(Value::as_str).unwrap_or(""),
-        "command": arr.get(7).and_then(Value::as_str).unwrap_or("")
+        "uid": user,
+        "pid": pid,
+        "ppid": ppid,
+        "cpu": cpu,
+        "start_time": start_time,
+        "tty": tty,
+        "time": time,
+        "command": cmd
     })
 }

@@ -90,10 +90,20 @@ impl ContainerService {
             .as_array()
             .ok_or_else(|| "Expected docker response must be an array")?;
 
+        let titles: Vec<String> = json["Titles"]
+            .as_array()
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(Value::as_str)
+                    .map(|s| s.to_string())
+                    .collect()
+            })
+            .unwrap_or_default();
+
         let process_list: Vec<Process> = json_as_array
             .iter()
             .map(|item| {
-                let mapped_value = container_process_mapper(&item);
+                let mapped_value = container_process_mapper(&titles, &item);
                 Process::from_json(&mapped_value)
             })
             .collect();
@@ -101,22 +111,30 @@ impl ContainerService {
         Ok(process_list)
     }
 
+    // Get container logs
     pub async fn stream_container_logs(&self, id: &str) -> FutureImpl {
-        let url = format!(
-            "http://{}/{}/containers/{}/logs?stdout=1&stderr=1&timestamp=1&follow=1",
-            *HOST, *DOCKER_API_VERSION, id
-        );
+        // format the docker api endpoints
+        let endpoint = DockerEndpoints::GET_CONTAINER_LOGS.replace("{id}", id);
+        let url = format!("http://{}/{}{}", *HOST, *DOCKER_API_VERSION, endpoint);
+        let topic = format!("containers:logs:{id}");
 
-        let rx = self.app_config.container_logs.subscribe_or_spawn(
-            id,
+        let (rx, past_logs) = self.app_config.event_bus.subscribe_or_spawn(
+            &topic,
             self.app_config.client.clone(),
             self.app_config.shutdown.clone(),
             url,
         );
 
-        BroadcastStream::new(rx)
-            .filter_map(|event| async move { event.ok().map(Ok) })
-            .boxed()
+        let past_stream = futures_util::stream::iter(
+            past_logs
+                .into_iter()
+                .map(|msg| Ok(Event::default().data(msg))),
+        );
+
+        let live_stream =
+            BroadcastStream::new(rx).filter_map(|event| async move { event.ok().map(Ok) });
+
+        past_stream.chain(live_stream).boxed()
     }
 
     pub async fn get_changes_on_container_file_system(
@@ -140,16 +158,14 @@ impl ContainerService {
         .await
     }
 
+    // Stream container resource usage
     pub async fn stream_container_resource_usage(&self, id: &str) -> FutureImpl {
-        let url = format!(
-            "http://{}/{}/containers/{}/stats",
-            *HOST, *DOCKER_API_VERSION, id
-        );
-
-        dbg!(" in stream container resource usgae");
-
-        let rx = self.app_config.container_stats.subscribe_or_spawn(
-            id,
+        // format the docker api endpoints
+        let endpoint = DockerEndpoints::GET_CONTAINERS_RESOURSE_USAGE_STATS.replace("{id}", id);
+        let url = format!("http://{}/{}{}", *HOST, *DOCKER_API_VERSION, endpoint);
+        let topic = format!("containers:stats:{id}");
+        let (rx, _) = self.app_config.event_bus.subscribe_or_spawn(
+            &topic,
             self.app_config.client.clone(),
             self.app_config.shutdown.clone(),
             url,

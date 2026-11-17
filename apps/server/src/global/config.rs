@@ -4,7 +4,7 @@ pub static DOCKER_API_VERSION: LazyLock<String> =
     LazyLock::new(|| env::var("DOCKER_API_VERSION").unwrap_or_else(|_| "v1.51".to_string()));
 
 pub static PORT: LazyLock<String> =
-    LazyLock::new(|| env::var("PORT").unwrap_or_else(|_| "5000".to_string()));
+    LazyLock::new(|| env::var("PORT").unwrap_or_else(|_| "8000".to_string()));
 
 pub static HOST: LazyLock<String> =
     LazyLock::new(|| env::var("HOST").unwrap_or_else(|_| "localhost".to_string()));
