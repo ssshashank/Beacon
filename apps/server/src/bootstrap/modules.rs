@@ -3,6 +3,7 @@ use crate::{
     modules::{
         containers::{controller::ContainerController, service::ContainerService},
         events::{controller::EventController, services::EventService},
+        exec::{controller::ExecController, services::ExecService},
         images::{controller::ImageController, services::ImageService},
     },
 };
@@ -13,6 +14,7 @@ pub struct Modules {
     pub containers: Arc<ContainerController>,
     pub events: Arc<EventController>,
     pub images: Arc<ImageController>,
+    pub exec: Arc<ExecController>,
 }
 
 pub fn init_modules(app_config: AppConfig) -> Modules {
@@ -22,10 +24,13 @@ pub fn init_modules(app_config: AppConfig) -> Modules {
     let event_controller = Arc::new(EventController::new(event_service));
     let image_service = ImageService::new(app_config.client.clone());
     let image_controller = Arc::new(ImageController::new(image_service));
+    let exec_service = ExecService::new(app_config.clone());
+    let exec_controller = Arc::new(ExecController::new(exec_service));
 
     Modules {
         containers: container_controller,
         events: event_controller,
         images: image_controller,
+        exec: exec_controller,
     }
 }

@@ -77,6 +77,54 @@ impl EventBus {
                     channel_ref.buffer.clone(),
                     shutdown,
                     url,
+                    None,
+                    Some(Box::new(move || {
+                        channels.pin().remove(&topic_str);
+                    })),
+                );
+                (channel_ref.tx.subscribe(), Vec::new())
+            }
+            Err(err) => {
+                let past_messages = {
+                    let buf = err.current.buffer.lock().unwrap();
+                    buf.iter().cloned().collect::<Vec<_>>()
+                };
+                (err.current.tx.subscribe(), past_messages)
+            }
+        }
+    }
+
+    // Subscribes or spawns a POST stream (e.g. for Docker exec start)
+    pub fn subscribe_or_spawn_post(
+        &self,
+        topic: &str,
+        client: Client,
+        shutdown: CancellationToken,
+        url: String,
+        payload: serde_json::Value,
+    ) -> (broadcast::Receiver<Event>, Vec<String>) {
+        let pinned = self.channels.pin();
+
+        if let Some(channel) = pinned.get(topic) {
+            let past_messages = {
+                let buf = channel.buffer.lock().unwrap();
+                buf.iter().cloned().collect::<Vec<_>>()
+            };
+            return (channel.tx.subscribe(), past_messages);
+        }
+
+        let channel = TopicChannel::new();
+        match pinned.try_insert(topic.to_string(), channel) {
+            Ok(channel_ref) => {
+                let channels = self.channels.clone();
+                let topic_str = topic.to_string();
+                spawn_listener(
+                    client,
+                    channel_ref.tx.clone(),
+                    channel_ref.buffer.clone(),
+                    shutdown,
+                    url,
+                    Some(payload),
                     Some(Box::new(move || {
                         channels.pin().remove(&topic_str);
                     })),
@@ -107,21 +155,28 @@ pub fn spawn_listener(
     buffer: Arc<Mutex<VecDeque<String>>>,
     shutdown: CancellationToken,
     url: String,
+    payload: Option<serde_json::Value>,
     on_exit: Option<Box<dyn FnOnce() + Send + 'static>>,
 ) {
     tokio::spawn(async move {
         let is_logs = url.contains("/logs");
+        let is_exec = url.contains("/exec/") && url.contains("/start");
+        let is_oneshot = is_logs || is_exec;
+
         loop {
             tokio::select! {
                 _ = shutdown.cancelled() => break,
-                _ = poll_once(&client, &tx, &buffer, &url) => {
-                    // For container logs: once a follow stream terminates (container stopped/exited),
-                    // break out instead of repeatedly re-fetching tail=100 in an infinite loop!
-                    if is_logs {
+                _ = poll_once(&client, &tx, &buffer, &url, payload.as_ref()) => {
+                    // For container logs and exec: once the follow/output stream terminates,
+                    // break out instead of repeatedly re-fetching in an infinite loop!
+                    if is_oneshot {
                         break;
                     }
                 }
             }
+        }
+        if is_exec {
+            let _ = tx.send(Event::default().event("end").data(r#"{"status":"completed"}"#));
         }
         if let Some(cleanup) = on_exit {
             cleanup();
@@ -134,10 +189,18 @@ async fn poll_once(
     tx: &broadcast::Sender<Event>,
     buffer: &Arc<Mutex<VecDeque<String>>>,
     url: &str,
+    payload: Option<&serde_json::Value>,
 ) {
-    if let Ok(response) = client.get(url).send().await {
+    let req = if let Some(body) = payload {
+        client.post(url).json(body)
+    } else {
+        client.get(url)
+    };
+
+    if let Ok(response) = req.send().await {
         let mut stream = response.bytes_stream();
-        let is_logs = url.contains("/logs");
+        let is_multiplexed =
+            url.contains("/logs") || (url.contains("/exec/") && url.contains("/start"));
 
         while let Some(chunk) = stream.next().await {
             let Ok(bytes) = chunk else { break };
@@ -145,7 +208,7 @@ async fn poll_once(
                 continue;
             }
 
-            if is_logs {
+            if is_multiplexed {
                 let frames = parse_docker_log_frames(&bytes);
                 for (stream_type, message) in frames {
                     let data = json!({
@@ -184,7 +247,7 @@ async fn poll_once(
 // Bytes 1..4: unused/zeros
 // Bytes 4..8: big-endian frame size
 // Bytes 8..: log message payload
-fn parse_docker_log_frames(bytes: &[u8]) -> Vec<(String, String)> {
+pub fn parse_docker_log_frames(bytes: &[u8]) -> Vec<(String, String)> {
     let mut frames = Vec::new();
     let mut offset = 0;
 

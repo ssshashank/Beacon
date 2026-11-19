@@ -1,5 +1,5 @@
 use crate::bootstrap::modules::Modules;
-use crate::modules::{containers, events, images};
+use crate::modules::{containers, events, exec, images};
 use axum::Router;
 
 const API_V1: &str = "/api/v1";
@@ -7,9 +7,13 @@ const API_V1: &str = "/api/v1";
 // Merges every module's router into the app's final router, grouped under /api/v1
 pub fn build_routes(modules: &Modules) -> Router {
     let v1 = Router::new()
-        .nest("/containers", containers::routes::routes(modules.containers.clone()))
+        .nest(
+            "/containers",
+            containers::routes::routes(modules.containers.clone()),
+        )
         .nest("/events", events::routes::routes(modules.events.clone()))
-        .nest("/images", images::routes::routes(modules.images.clone()));
+        .nest("/images", images::routes::routes(modules.images.clone()))
+        .nest("/exec", exec::routes::routes(modules.exec.clone()));
 
     Router::new().nest(API_V1, v1)
 }

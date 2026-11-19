@@ -33,6 +33,7 @@ impl EventService {
             app_config.shutdown.clone(),
             url,
             None,
+            None,
         );
 
         Self { app_config }
