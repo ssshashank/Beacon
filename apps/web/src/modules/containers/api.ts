@@ -1,6 +1,6 @@
 "use server";
 import { ApiFactory } from "../../global/services/http";
-import { BASE_URL, type HttpResponse } from "../../global/constants/network";
+import { type HttpResponse } from "../../global/constants/network";
 
 const ContainerAPI = {
   listContainers: async () => ApiFactory.get<HttpResponse>("/containers/getAllContainers"),

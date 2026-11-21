@@ -1,4 +1,4 @@
-import { createMemo, For, Loading } from "solid-js";
+import { createMemo, For, Loading, Show } from "solid-js";
 import { InfoIcons } from "../../../global/components/_icons/info";
 import { StatusLabel } from "../../../global/components/_common/statusDot";
 import { TagsIcon } from "../../../global/components/_icons/tag";
@@ -101,24 +101,34 @@ type PortBinding = {
 type PortBindings = Record<string, PortBinding[]>;
 
 function ContainerPortForward(props: any) {
-
   const ports = createMemo(() => {
-    const portBindings = (props.container()?.HostConfig?.PortBindings ?? {}) as PortBindings;
+    const c = props.container();
+    if (!c) return [];
 
-    const pb = Object.entries(portBindings).flatMap(
+    // Primary: mapped ports from backend
+    if (Array.isArray(c.ports) && c.ports.length > 0) {
+      return c.ports.map((p: any) => ({
+        hostPort: p.host_port || "-",
+        containerPort: p.container_port || "-",
+        protocol: p.protocol || "tcp",
+      }));
+    }
+
+    // Fallback: HostConfig.PortBindings or NetworkSettings.Ports
+    const portBindings = (c.HostConfig?.PortBindings ?? c.NetworkSettings?.Ports ?? {}) as PortBindings;
+    return Object.entries(portBindings).flatMap(
       ([containerPortWithProtocol, bindings]) => {
-        const [containerPort, protocol] =
-          containerPortWithProtocol.split("/");
-
+        const [containerPort, protocol] = containerPortWithProtocol.split("/");
+        if (!bindings || bindings.length === 0) {
+          return [{ hostPort: "-", containerPort, protocol }];
+        }
         return bindings.map((binding) => ({
-          hostPort: binding.HostPort,
+          hostPort: binding.HostPort || "-",
           containerPort,
           protocol,
         }));
       }
     );
-
-    return pb;
   });
 
   return (
@@ -128,26 +138,51 @@ function ContainerPortForward(props: any) {
         <span class='text-md font-medium'>Port Forwards</span>
       </div>
       <div class="text-gray-200 pt-2">
-        <div class='flex items-center justify-between py-1 text-gray-400'>
-          <span>Host Port</span>
-          <span>ContainerPort</span>
-          <span>Protocol</span>
-        </div>
-        <For each={ports()}>
-          {(port) => (
-            <div class='flex items-center justify-between py-1'>
-              <span class='text-blue-500'>{port.hostPort}</span>
-              <span>{port.containerPort}</span>
-              <span>{port.protocol}</span>
-            </div>
-          )}
-        </For>
+        <Show
+          when={ports().length > 0}
+          fallback={<p class="text-xs text-neutral-500 py-2 text-center">No port forwards found</p>}
+        >
+          <div class='flex items-center justify-between py-1 text-gray-400 text-xs font-medium'>
+            <span>Host Port</span>
+            <span>ContainerPort</span>
+            <span>Protocol</span>
+          </div>
+          <For each={ports()}>
+            {(port) => (
+              <div class='flex items-center justify-between py-1 text-xs'>
+                <span class='text-blue-500 font-mono'>{port.hostPort}</span>
+                <span class='font-mono'>{port.containerPort}</span>
+                <span class='text-neutral-400 uppercase text-[11px]'>{port.protocol}</span>
+              </div>
+            )}
+          </For>
+        </Show>
       </div>
     </div>
   );
 }
 
 function ContainerMount(props: any) {
+  const mounts = createMemo(() => {
+    const c = props.container();
+    if (!c) return [];
+
+    if (Array.isArray(c.mounts) && c.mounts.length > 0) {
+      return c.mounts.map((m: any) => ({
+        source: m.source || "-",
+        destination: m.destination || "-",
+      }));
+    }
+
+    if (Array.isArray(c.Mounts) && c.Mounts.length > 0) {
+      return c.Mounts.map((m: any) => ({
+        source: m.Source || "-",
+        destination: m.Destination || "-",
+      }));
+    }
+
+    return [];
+  });
 
   return (
     <div class='h-fit rounded bg-[#151619] p-3'>
@@ -156,18 +191,27 @@ function ContainerMount(props: any) {
         <span class='text-md font-medium'>Mounts</span>
       </div>
       <div class="text-gray-200 pt-2">
-        <div class='flex items-center justify-between py-1 text-gray-400'>
-          <span>Sources</span>
-          <span>Destination</span>
-        </div>
-        <For each={props.container()?.Mounts}>
-          {(mount) => (
-            <div class='flex items-center justify-between py-1'>
-              <span class='text-blue-400'>{mount.Source}</span>
-              <span>{mount.Destination}</span>
-            </div>
-          )}
-        </For>
+        <Show
+          when={mounts().length > 0}
+          fallback={<p class="text-xs text-neutral-500 py-2 text-center">No mounts found</p>}
+        >
+          <div class='flex items-center justify-between py-1 text-gray-400 text-xs font-medium'>
+            <span>Sources</span>
+            <span>Destination</span>
+          </div>
+          <For each={mounts()}>
+            {(mount) => (
+              <div class='flex items-center justify-between py-1 text-xs gap-4'>
+                <span class='text-blue-400 font-mono truncate max-w-[50%]' title={mount.source}>
+                  {mount.source}
+                </span>
+                <span class='font-mono truncate max-w-[50%]' title={mount.destination}>
+                  {mount.destination}
+                </span>
+              </div>
+            )}
+          </For>
+        </Show>
       </div>
     </div>
   );

@@ -40,6 +40,23 @@ export interface ImageDTO {
   size: number;
 }
 
+// Mirrors server/src/modules/containers/dto.rs PortMapping
+export interface PortMappingDTO {
+  host_ip?: string | null;
+  host_port?: string | null;
+  container_port: string;
+  protocol: string;
+}
+
+// Mirrors server/src/modules/containers/dto.rs ContainerMountInfo
+export interface ContainerMountDTO {
+  source: string;
+  destination: string;
+  type?: string;
+  mode?: string;
+  rw?: boolean;
+}
+
 // Mirrors server/src/modules/containers/dto.rs Container
 export interface ContainerDetailDTO {
   id: string;
@@ -57,6 +74,10 @@ export interface ContainerDetailDTO {
   created_at: string;
   updated_at?: string | null;
   deleted_at?: string | null;
+  ports?: PortMappingDTO[];
+  mounts?: ContainerMountDTO[];
+  HostConfig?: any;
+  Mounts?: any[];
 }
 
 // Mirrors server/src/modules/containers/dto.rs Process

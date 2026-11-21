@@ -117,7 +117,7 @@ export default function ContainerByIDScreen() {
                         Loading...
                       </div>
                     }>
-                    <LazyContainerFiles />
+                    <LazyContainerFiles params={params} />
                   </Loading>
                 </Show>
               </TabsContent>
