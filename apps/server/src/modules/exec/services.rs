@@ -4,6 +4,7 @@ use crate::{
         config::{DOCKER_API_VERSION, HOST},
         docker::DockerEndpoints,
     },
+    modules::exec::utils::parse_ls_line,
 };
 use axum::response::sse::Event;
 use futures_util::{StreamExt, stream::BoxStream};
@@ -14,6 +15,20 @@ use tokio_stream::wrappers::BroadcastStream;
 
 // Type alias
 pub type FutureImpl = BoxStream<'static, Result<Event, Infallible>>;
+
+fn transform_exec_log(raw: &str) -> Option<Event> {
+    let val: Value = serde_json::from_str(raw).ok()?;
+    if val["event"].as_str() == Some("end") || val["status"].as_str() == Some("completed") {
+        return Some(
+            Event::default()
+                .event("end")
+                .data(r#"{"status":"completed"}"#),
+        );
+    }
+    let msg = val["message"].as_str()?;
+    let exec = parse_ls_line(msg)?;
+    Some(Event::default().data(exec.to_json().to_string()))
+}
 
 pub struct ExecService {
     app_config: AppConfig,
@@ -40,7 +55,7 @@ impl ExecService {
         Ok(json)
     }
 
-    // Stream exec output directly (same pattern as stream_container_logs)
+    // Stream exec output directly (mapped to ExecDTO)
     pub async fn start_an_exec(&self, id: &str) -> FutureImpl {
         let endpoint = DockerEndpoints::START_AN_EXEC.replace("{id}", id);
         let url = format!("http://{}/{}{}", *HOST, *DOCKER_API_VERSION, endpoint);
@@ -62,11 +77,13 @@ impl ExecService {
         let past_stream = futures_util::stream::iter(
             past_logs
                 .into_iter()
-                .map(|msg| Ok(Event::default().data(msg))),
+                .filter_map(|raw| transform_exec_log(&raw).map(Ok)),
         );
 
-        let live_stream =
-            BroadcastStream::new(rx).filter_map(|event| async move { event.ok().map(Ok) });
+        let live_stream = BroadcastStream::new(rx).filter_map(|msg_res| async move {
+            let raw = msg_res.ok()?;
+            transform_exec_log(&raw).map(Ok)
+        });
 
         past_stream.chain(live_stream).boxed()
     }

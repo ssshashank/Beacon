@@ -1,4 +1,3 @@
-use axum::response::sse::Event;
 use futures_util::StreamExt;
 use papaya::HashMap;
 use reqwest::Client;
@@ -14,7 +13,7 @@ const BUFFER_CAPACITY: usize = 100;
 
 #[derive(Clone)]
 pub struct TopicChannel {
-    pub tx: broadcast::Sender<Event>,
+    pub tx: broadcast::Sender<String>,
     pub buffer: Arc<Mutex<VecDeque<String>>>,
 }
 
@@ -55,7 +54,7 @@ impl EventBus {
         client: Client,
         shutdown: CancellationToken,
         url: String,
-    ) -> (broadcast::Receiver<Event>, Vec<String>) {
+    ) -> (broadcast::Receiver<String>, Vec<String>) {
         let pinned = self.channels.pin();
 
         if let Some(channel) = pinned.get(topic) {
@@ -102,7 +101,7 @@ impl EventBus {
         shutdown: CancellationToken,
         url: String,
         payload: serde_json::Value,
-    ) -> (broadcast::Receiver<Event>, Vec<String>) {
+    ) -> (broadcast::Receiver<String>, Vec<String>) {
         let pinned = self.channels.pin();
 
         if let Some(channel) = pinned.get(topic) {
@@ -148,10 +147,29 @@ impl Default for EventBus {
     }
 }
 
+fn decode_percent(s: &str) -> String {
+    let mut result = String::with_capacity(s.len());
+    let mut chars = s.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c == '%' {
+            let h1 = chars.next();
+            let h2 = chars.next();
+            if let (Some(c1), Some(c2)) = (h1, h2) {
+                if let Ok(byte) = u8::from_str_radix(&format!("{}{}", c1, c2), 16) {
+                    result.push(byte as char);
+                    continue;
+                }
+            }
+        }
+        result.push(c);
+    }
+    result
+}
+
 // Single long-lived task that owns one Docker connection and fans every event
 pub fn spawn_listener(
     client: Client,
-    tx: broadcast::Sender<Event>,
+    tx: broadcast::Sender<String>,
     buffer: Arc<Mutex<VecDeque<String>>>,
     shutdown: CancellationToken,
     url: String,
@@ -161,13 +179,14 @@ pub fn spawn_listener(
     tokio::spawn(async move {
         let is_logs = url.contains("/logs");
         let is_exec = url.contains("/exec/") && url.contains("/start");
-        let is_oneshot = is_logs || is_exec;
+        let is_archive = url.contains("/archive");
+        let is_oneshot = is_logs || is_exec || is_archive;
 
         loop {
             tokio::select! {
                 _ = shutdown.cancelled() => break,
                 _ = poll_once(&client, &tx, &buffer, &url, payload.as_ref()) => {
-                    // For container logs and exec: once the follow/output stream terminates,
+                    // For container logs, exec, and archive: once stream terminates,
                     // break out instead of repeatedly re-fetching in an infinite loop!
                     if is_oneshot {
                         break;
@@ -175,8 +194,8 @@ pub fn spawn_listener(
                 }
             }
         }
-        if is_exec {
-            let _ = tx.send(Event::default().event("end").data(r#"{"status":"completed"}"#));
+        if is_exec || is_archive {
+            let _ = tx.send(json!({"event": "end", "status": "completed"}).to_string());
         }
         if let Some(cleanup) = on_exit {
             cleanup();
@@ -186,7 +205,7 @@ pub fn spawn_listener(
 
 async fn poll_once(
     client: &Client,
-    tx: &broadcast::Sender<Event>,
+    tx: &broadcast::Sender<String>,
     buffer: &Arc<Mutex<VecDeque<String>>>,
     url: &str,
     payload: Option<&serde_json::Value>,
@@ -199,8 +218,25 @@ async fn poll_once(
 
     if let Ok(response) = req.send().await {
         let mut stream = response.bytes_stream();
+        let is_archive = url.contains("/archive");
         let is_multiplexed =
             url.contains("/logs") || (url.contains("/exec/") && url.contains("/start"));
+
+        let mut tar_buffer = Vec::new();
+        let mut tar_seen = std::collections::HashSet::new();
+        let target_dir = if is_archive {
+            let raw_path = url
+                .split("path=")
+                .nth(1)
+                .unwrap_or("")
+                .split('&')
+                .next()
+                .unwrap_or("");
+            let decoded = decode_percent(raw_path);
+            decoded.trim_matches('/').to_string()
+        } else {
+            String::new()
+        };
 
         while let Some(chunk) = stream.next().await {
             let Ok(bytes) = chunk else { break };
@@ -208,7 +244,93 @@ async fn poll_once(
                 continue;
             }
 
-            if is_multiplexed {
+            if is_archive {
+                tar_buffer.extend_from_slice(&bytes);
+                while tar_buffer.len() >= 512 {
+                    if tar_buffer[..512].iter().all(|&b| b == 0) {
+                        tar_buffer.drain(..512);
+                        continue;
+                    }
+
+                    let (raw_name, kind, size, mtime) = parse_tar_header_block(&tar_buffer[..512]);
+                    let content_bytes = ((size + 511) / 512) * 512;
+                    let total_entry_bytes = 512 + content_bytes as usize;
+
+                    if tar_buffer.len() < total_entry_bytes {
+                        break;
+                    }
+
+                    let clean_name = raw_name
+                        .trim_matches('/')
+                        .trim_start_matches("./")
+                        .to_string();
+
+                    if !clean_name.is_empty()
+                        && clean_name != target_dir
+                        && clean_name != "."
+                        && clean_name != ".."
+                    {
+                        let rel_path = if target_dir.is_empty() {
+                            clean_name.as_str()
+                        } else if clean_name.starts_with(&target_dir) {
+                            let rest = &clean_name[target_dir.len()..];
+                            if rest.is_empty() {
+                                ""
+                            } else if rest.starts_with('/') {
+                                rest.trim_start_matches('/')
+                            } else {
+                                ""
+                            }
+                        } else {
+                            ""
+                        };
+
+                        if !rel_path.is_empty() {
+                            let mut segments = rel_path.split('/');
+                            if let Some(first_seg) = segments.next() {
+                                if !first_seg.is_empty()
+                                    && first_seg != "."
+                                    && first_seg != ".."
+                                    && !tar_seen.contains(first_seg)
+                                {
+                                    tar_seen.insert(first_seg.to_string());
+                                    let is_folder = kind == "Folder" || segments.next().is_some();
+                                    let modified_date = if mtime > 0 {
+                                        chrono::DateTime::from_timestamp(mtime, 0)
+                                            .map(|dt| dt.format("%d %b %H:%M").to_string())
+                                            .unwrap_or_default()
+                                    } else {
+                                        String::new()
+                                    };
+
+                                    let exec = crate::modules::exec::dto::Exec {
+                                        name: first_seg.to_string(),
+                                        modified_date,
+                                        user_type: "root".to_string(),
+                                        size: format_tar_size(size, is_folder),
+                                        kind: if is_folder {
+                                            "Folder".to_string()
+                                        } else {
+                                            "File".to_string()
+                                        },
+                                    };
+
+                                    let data = exec.to_json().to_string();
+                                    if let Ok(mut buf) = buffer.lock() {
+                                        if buf.len() >= BUFFER_CAPACITY {
+                                            buf.pop_front();
+                                        }
+                                        buf.push_back(data.clone());
+                                    }
+                                    let _ = tx.send(data);
+                                }
+                            }
+                        }
+                    }
+
+                    tar_buffer.drain(..total_entry_bytes);
+                }
+            } else if is_multiplexed {
                 let frames = parse_docker_log_frames(&bytes);
                 for (stream_type, message) in frames {
                     let data = json!({
@@ -225,21 +347,89 @@ async fn poll_once(
                         buf.push_back(data.clone());
                     }
 
-                    let _ = tx.send(Event::default().data(data));
+                    let _ = tx.send(data);
                 }
             } else {
                 let s = String::from_utf8_lossy(&bytes);
                 for line in s.lines() {
                     let trimmed = line.trim();
                     if !trimmed.is_empty() {
-                        let _ = tx.send(Event::default().data(trimmed));
+                        let _ = tx.send(trimmed.to_string());
                     }
                 }
             }
         }
     }
 
-    tokio::time::sleep(Duration::from_secs(1)).await;
+    let is_oneshot = url.contains("/logs")
+        || (url.contains("/exec/") && url.contains("/start"))
+        || url.contains("/archive");
+
+    if !is_oneshot {
+        tokio::time::sleep(Duration::from_secs(1)).await;
+    }
+}
+
+fn parse_tar_header_block(header: &[u8]) -> (String, String, u64, i64) {
+    let name_end = header[0..100].iter().position(|&b| b == 0).unwrap_or(100);
+    let name_part = String::from_utf8_lossy(&header[0..name_end])
+        .trim_matches('\0')
+        .trim()
+        .to_string();
+
+    let raw_name = if header.len() >= 500 && header[345] != 0 {
+        let prefix_end = header[345..500].iter().position(|&b| b == 0).unwrap_or(155);
+        let prefix = String::from_utf8_lossy(&header[345..345 + prefix_end])
+            .trim_matches('\0')
+            .trim()
+            .to_string();
+        if !prefix.is_empty() {
+            format!("{}/{}", prefix, name_part)
+        } else {
+            name_part
+        }
+    } else {
+        name_part
+    };
+
+    let typeflag = header[156];
+    let kind = match typeflag {
+        b'5' => "Folder".to_string(),
+        b'2' => "Folder".to_string(),
+        _ => {
+            if raw_name.ends_with('/') {
+                "Folder".to_string()
+            } else {
+                "File".to_string()
+            }
+        }
+    };
+
+    let size_slice = &header[124..136];
+    let size_end = size_slice.iter().position(|&b| b == 0 || b == b' ').unwrap_or(12);
+    let size_str = std::str::from_utf8(&size_slice[..size_end]).unwrap_or("0").trim();
+    let size = u64::from_str_radix(size_str, 8).unwrap_or(0);
+
+    let mtime_slice = &header[136..148];
+    let mtime_end = mtime_slice.iter().position(|&b| b == 0 || b == b' ').unwrap_or(12);
+    let mtime_str = std::str::from_utf8(&mtime_slice[..mtime_end]).unwrap_or("0").trim();
+    let mtime = i64::from_str_radix(mtime_str, 8).unwrap_or(0);
+
+    (raw_name, kind, size, mtime)
+}
+
+fn format_tar_size(size: u64, is_dir: bool) -> String {
+    if is_dir {
+        "-".to_string()
+    } else if size == 0 {
+        "Zero kB".to_string()
+    } else if size < 1024 {
+        format!("{} B", size)
+    } else if size < 1024 * 1024 {
+        format!("{} kB", size / 1024)
+    } else {
+        format!("{:.1} MB", size as f64 / (1024.0 * 1024.0))
+    }
 }
 
 // Parses Docker multiplexed 8-byte frames:

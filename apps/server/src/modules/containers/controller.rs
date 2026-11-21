@@ -67,6 +67,18 @@ impl ContainerController {
         Sse::new(self.service.stream_container_logs(id).await)
     }
 
+    pub async fn stream_archive_of_a_file_system(
+        &self,
+        id: &str,
+        path: Option<String>,
+    ) -> Sse<impl futures_util::Stream<Item = Result<Event, Infallible>> + use<>> {
+        Sse::new(
+            self.service
+                .stream_archive_of_a_file_system(id, path.as_deref())
+                .await,
+        )
+    }
+
     pub async fn get_changes_on_container_file_system_by_id(&self, id: &str) -> Json<Value> {
         match self.service.get_changes_on_container_file_system(id).await {
             Ok(json) => Json(json),

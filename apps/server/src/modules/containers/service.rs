@@ -20,6 +20,19 @@ use tokio_stream::wrappers::BroadcastStream;
 // Type alias
 type FutureImpl = BoxStream<'static, Result<Event, Infallible>>;
 
+fn transform_archive_event(raw: &str) -> Option<Event> {
+    if let Ok(val) = serde_json::from_str::<Value>(raw) {
+        if val["event"].as_str() == Some("end") || val["status"].as_str() == Some("completed") {
+            return Some(
+                Event::default()
+                    .event("end")
+                    .data(r#"{"status":"completed"}"#),
+            );
+        }
+    }
+    Some(Event::default().data(raw.to_string()))
+}
+
 pub struct ContainerService {
     app_config: AppConfig,
 }
@@ -131,8 +144,43 @@ impl ContainerService {
                 .map(|msg| Ok(Event::default().data(msg))),
         );
 
-        let live_stream =
-            BroadcastStream::new(rx).filter_map(|event| async move { event.ok().map(Ok) });
+        let live_stream = BroadcastStream::new(rx)
+            .filter_map(|msg| async move { msg.ok().map(|s| Ok(Event::default().data(s))) });
+
+        past_stream.chain(live_stream).boxed()
+    }
+
+    // Stream file system archive with 512-byte tar header parsing (works on distroless & scratch containers)
+    pub async fn stream_archive_of_a_file_system(
+        &self,
+        id: &str,
+        path: Option<&str>,
+    ) -> FutureImpl {
+        let req_path = path.unwrap_or("/").trim();
+        let safe_path = if req_path.is_empty() { "/" } else { req_path };
+        let url = format!(
+            "http://{}/{}/containers/{id}/archive?path={safe_path}",
+            *HOST, *DOCKER_API_VERSION
+        );
+        let topic = format!("containers:archive:{id}:{safe_path}");
+
+        let (rx, past_logs) = self.app_config.event_bus.subscribe_or_spawn(
+            &topic,
+            self.app_config.client.clone(),
+            self.app_config.shutdown.clone(),
+            url,
+        );
+
+        let past_stream = futures_util::stream::iter(
+            past_logs
+                .into_iter()
+                .filter_map(|raw| transform_archive_event(&raw).map(Ok)),
+        );
+
+        let live_stream = BroadcastStream::new(rx).filter_map(|msg_res| async move {
+            let raw = msg_res.ok()?;
+            transform_archive_event(&raw).map(Ok)
+        });
 
         past_stream.chain(live_stream).boxed()
     }
@@ -172,7 +220,7 @@ impl ContainerService {
         );
 
         BroadcastStream::new(rx)
-            .filter_map(|event| async move { event.ok().map(Ok) })
+            .filter_map(|msg| async move { msg.ok().map(|s| Ok(Event::default().data(s))) })
             .boxed()
     }
 }

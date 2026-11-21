@@ -51,6 +51,55 @@ impl Process {
     }
 }
 
+#[derive(Debug, Serialize, Clone)]
+pub struct PortMapping {
+    pub host_ip: Option<String>,
+    pub host_port: Option<String>,
+    pub container_port: String,
+    pub protocol: String,
+}
+
+impl PortMapping {
+    pub fn from_json(val: &Value) -> Option<Self> {
+        let container_port = val.get("container_port").and_then(Value::as_str)?.to_string();
+        let protocol = val.get("protocol").and_then(Value::as_str).unwrap_or("tcp").to_string();
+        let host_ip = val.get("host_ip").and_then(Value::as_str).map(String::from);
+        let host_port = val.get("host_port").and_then(Value::as_str).map(String::from);
+        Some(PortMapping {
+            host_ip,
+            host_port,
+            container_port,
+            protocol,
+        })
+    }
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct ContainerMountInfo {
+    pub source: String,
+    pub destination: String,
+    pub r#type: String,
+    pub mode: String,
+    pub rw: bool,
+}
+
+impl ContainerMountInfo {
+    pub fn from_json(val: &Value) -> Option<Self> {
+        let source = val.get("source").and_then(Value::as_str).unwrap_or("").to_string();
+        let destination = val.get("destination").and_then(Value::as_str).unwrap_or("").to_string();
+        let r#type = val.get("type").and_then(Value::as_str).unwrap_or("").to_string();
+        let mode = val.get("mode").and_then(Value::as_str).unwrap_or("").to_string();
+        let rw = val.get("rw").and_then(Value::as_bool).unwrap_or(true);
+        Some(ContainerMountInfo {
+            source,
+            destination,
+            r#type,
+            mode,
+            rw,
+        })
+    }
+}
+
 #[derive(Debug, Serialize)]
 pub struct Container {
     pub id: String,
@@ -68,11 +117,25 @@ pub struct Container {
     pub created_at: DateTime<Utc>,
     pub updated_at: Option<DateTime<Utc>>,
     pub deleted_at: Option<DateTime<Utc>>,
+    pub ports: Vec<PortMapping>,
+    pub mounts: Vec<ContainerMountInfo>,
 }
 
 impl Container {
     // serialize from json to container
     pub fn from_json(json: &Value) -> Container {
+        let ports = if let Some(arr) = json.get("ports").and_then(Value::as_array) {
+            arr.iter().filter_map(PortMapping::from_json).collect()
+        } else {
+            Vec::new()
+        };
+
+        let mounts = if let Some(arr) = json.get("mounts").and_then(Value::as_array) {
+            arr.iter().filter_map(ContainerMountInfo::from_json).collect()
+        } else {
+            Vec::new()
+        };
+
         return Container {
             id: json["id"].as_str().unwrap_or("").to_string(),
             host_id: json["host_id"].as_str().map(String::from),
@@ -95,6 +158,8 @@ impl Container {
             deleted_at: json["deleted_at"]
                 .as_str()
                 .and_then(|s| s.parse::<DateTime<Utc>>().ok()),
+            ports,
+            mounts,
         };
     }
 
@@ -115,7 +180,9 @@ impl Container {
             "commad": self.command,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
-            "deleted_at": self.deleted_at
+            "deleted_at": self.deleted_at,
+            "ports": self.ports,
+            "mounts": self.mounts,
             }
         );
     }

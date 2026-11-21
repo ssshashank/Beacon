@@ -45,6 +45,31 @@ pub fn get_container_labels(labels: &Value) -> HashMap<String, String> {
 pub fn list_container_mapper(json: &Value) -> Value {
     let image_res = image_mapper(json);
 
+    let mut ports: Vec<Value> = Vec::new();
+    if let Some(arr) = json.get("Ports").and_then(Value::as_array) {
+        for p in arr {
+            ports.push(json!({
+                "host_ip": p.get("IP").and_then(Value::as_str),
+                "host_port": p.get("PublicPort").map(|v| v.to_string()),
+                "container_port": p.get("PrivatePort").map(|v| v.to_string()).unwrap_or_default(),
+                "protocol": p.get("Type").and_then(Value::as_str).unwrap_or("tcp"),
+            }));
+        }
+    }
+
+    let mut mounts: Vec<Value> = Vec::new();
+    if let Some(arr) = json.get("Mounts").and_then(Value::as_array) {
+        for m in arr {
+            mounts.push(json!({
+                "source": m.get("Source").and_then(Value::as_str).unwrap_or(""),
+                "destination": m.get("Destination").and_then(Value::as_str).unwrap_or(""),
+                "type": m.get("Type").and_then(Value::as_str).unwrap_or(""),
+                "mode": m.get("Mode").and_then(Value::as_str).unwrap_or(""),
+                "rw": m.get("RW").and_then(Value::as_bool).unwrap_or(true),
+            }));
+        }
+    }
+
     json!({
         "id": json["Id"],
         "host_id": null,
@@ -57,14 +82,85 @@ pub fn list_container_mapper(json: &Value) -> Value {
         "command": json["Command"],
         "names": json["Names"][0],
         "up_status": json["Status"],
-        "status":json["State"],
+        "status": json["State"],
         "labels": (&json["Labels"]),
         "created_at": json["Created"],
+        "ports": ports,
+        "mounts": mounts,
     })
 }
 
 pub fn inspect_container_mapper(json: &Value) -> Value {
     let image_res = image_mapper(json);
+
+    let mut ports: Vec<Value> = Vec::new();
+    let ports_obj = json
+        .get("NetworkSettings")
+        .and_then(|ns| ns.get("Ports"))
+        .or_else(|| json.get("HostConfig").and_then(|hc| hc.get("PortBindings")));
+
+    if let Some(obj) = ports_obj.and_then(Value::as_object) {
+        for (port_proto, bindings) in obj {
+            let mut parts = port_proto.split('/');
+            let container_port = parts.next().unwrap_or("").to_string();
+            let protocol = parts.next().unwrap_or("tcp").to_string();
+
+            if let Some(arr) = bindings.as_array() {
+                if arr.is_empty() {
+                    ports.push(json!({
+                        "host_ip": null,
+                        "host_port": null,
+                        "container_port": container_port,
+                        "protocol": protocol,
+                    }));
+                } else {
+                    for b in arr {
+                        ports.push(json!({
+                            "host_ip": b.get("HostIp").and_then(Value::as_str),
+                            "host_port": b.get("HostPort").and_then(Value::as_str),
+                            "container_port": container_port.clone(),
+                            "protocol": protocol.clone(),
+                        }));
+                    }
+                }
+            } else {
+                ports.push(json!({
+                    "host_ip": null,
+                    "host_port": null,
+                    "container_port": container_port,
+                    "protocol": protocol,
+                }));
+            }
+        }
+    }
+
+    let mut mounts: Vec<Value> = Vec::new();
+    if let Some(arr) = json.get("Mounts").and_then(Value::as_array) {
+        for m in arr {
+            mounts.push(json!({
+                "source": m.get("Source").and_then(Value::as_str).unwrap_or(""),
+                "destination": m.get("Destination").and_then(Value::as_str).unwrap_or(""),
+                "type": m.get("Type").and_then(Value::as_str).unwrap_or(""),
+                "mode": m.get("Mode").and_then(Value::as_str).unwrap_or(""),
+                "rw": m.get("RW").and_then(Value::as_bool).unwrap_or(true),
+            }));
+        }
+    } else if let Some(binds) = json.get("HostConfig").and_then(|hc| hc.get("Binds")).and_then(Value::as_array) {
+        for b in binds {
+            if let Some(s) = b.as_str() {
+                let parts: Vec<&str> = s.split(':').collect();
+                if parts.len() >= 2 {
+                    mounts.push(json!({
+                        "source": parts[0],
+                        "destination": parts[1],
+                        "type": "bind",
+                        "mode": parts.get(2).unwrap_or(&"rw"),
+                        "rw": parts.get(2).map_or(true, |m| *m != "ro"),
+                    }));
+                }
+            }
+        }
+    }
 
     json!({
         "id": json["Id"],
@@ -86,9 +182,11 @@ pub fn inspect_container_mapper(json: &Value) -> Value {
                 .unwrap_or_default(),
         "names": json["Name"],
         "up_status": json["State"]["StartedAt"],
-        "status":json["State"]["Status"],
+        "status": json["State"]["Status"],
         "labels": (&json["Config"]["Labels"]),
         "created_at": json["Created"],
+        "ports": ports,
+        "mounts": mounts,
     })
 }
 

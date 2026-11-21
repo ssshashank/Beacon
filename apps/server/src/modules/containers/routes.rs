@@ -8,7 +8,7 @@ use crate::{
 };
 use axum::{
     Json, Router,
-    extract::{Path, State},
+    extract::{Path, Query, State},
     response::{Sse, sse::Event},
     routing::get,
 };
@@ -44,6 +44,10 @@ pub fn routes(controller: Arc<ContainerController>) -> Router {
         .route(
             ContainerRoutesName::GET_CONTAINER_RESOURCE_USAGE_STATS_BY_ID,
             get(stream_container_resource_usage_events),
+        )
+        .route(
+            ContainerRoutesName::ARCHIVE_FILE_SYSTEM_OF_A_CONTAINER,
+            get(stream_archive_of_a_file_system_event),
         )
         .with_state(controller)
 }
@@ -96,4 +100,13 @@ async fn stream_container_resource_usage_events(
     State(controller): State<Arc<ContainerController>>,
 ) -> Sse<impl futures_util::Stream<Item = Result<Event, Infallible>>> {
     controller.stream_container_resource_usage(&id).await
+}
+
+async fn stream_archive_of_a_file_system_event(
+    Path(id): Path<String>,
+    Query(params): Query<std::collections::HashMap<String, String>>,
+    State(controller): State<Arc<ContainerController>>,
+) -> Sse<impl futures_util::Stream<Item = Result<Event, Infallible>>> {
+    let path = params.get("path").cloned();
+    controller.stream_archive_of_a_file_system(&id, path).await
 }

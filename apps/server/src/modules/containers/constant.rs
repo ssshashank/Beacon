@@ -11,4 +11,5 @@ impl ContainerRoutesName {
     pub const EXPORT_CONTAINER_BY_ID: &'static str = r"/exportContainerById/{id}";
     pub const GET_CONTAINER_RESOURCE_USAGE_STATS_BY_ID: &'static str =
         r"/getContainerResourceUsageStatsById/{id}";
+    pub const ARCHIVE_FILE_SYSTEM_OF_A_CONTAINER: &'static str = r"/fileSystem/{id}";
 }

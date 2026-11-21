@@ -43,7 +43,7 @@ impl EventService {
         let rx = self.app_config.event_tx.subscribe();
 
         BroadcastStream::new(rx)
-            .filter_map(|event| async move { event.ok().map(Ok) })
+            .filter_map(|msg| async move { msg.ok().map(|s| Ok(Event::default().data(s))) })
             .boxed()
     }
 }
