@@ -10,7 +10,7 @@ use axum::{
     Json, Router,
     extract::{Path, Query, State},
     response::{Sse, sse::Event},
-    routing::get,
+    routing::{delete, get, post},
 };
 use serde_json::Value;
 use std::{convert::Infallible, sync::Arc};
@@ -48,6 +48,22 @@ pub fn routes(controller: Arc<ContainerController>) -> Router {
         .route(
             ContainerRoutesName::ARCHIVE_FILE_SYSTEM_OF_A_CONTAINER,
             get(stream_archive_of_a_file_system_event),
+        )
+        .route(
+            ContainerRoutesName::START_A_CONTAINER,
+            post(start_container),
+        )
+        .route(
+            ContainerRoutesName::STOP_A_CONTAINER,
+            post(stop_container),
+        )
+        .route(
+            ContainerRoutesName::RESTART_A_CONTAINER,
+            post(restart_container),
+        )
+        .route(
+            ContainerRoutesName::DELETE_A_CONTAINER,
+            delete(delete_container),
         )
         .with_state(controller)
 }
@@ -109,4 +125,32 @@ async fn stream_archive_of_a_file_system_event(
 ) -> Sse<impl futures_util::Stream<Item = Result<Event, Infallible>>> {
     let path = params.get("path").cloned();
     controller.stream_archive_of_a_file_system(&id, path).await
+}
+
+async fn start_container(
+    State(controller): State<Arc<ContainerController>>,
+    Path(id): Path<String>,
+) -> Json<ResponseBody<Value>> {
+    controller.start_container(&id).await
+}
+
+async fn stop_container(
+    State(controller): State<Arc<ContainerController>>,
+    Path(id): Path<String>,
+) -> Json<ResponseBody<Value>> {
+    controller.stop_container(&id).await
+}
+
+async fn restart_container(
+    State(controller): State<Arc<ContainerController>>,
+    Path(id): Path<String>,
+) -> Json<ResponseBody<Value>> {
+    controller.restart_container(&id).await
+}
+
+async fn delete_container(
+    State(controller): State<Arc<ContainerController>>,
+    Path(id): Path<String>,
+) -> Json<ResponseBody<Value>> {
+    controller.delete_container(&id).await
 }

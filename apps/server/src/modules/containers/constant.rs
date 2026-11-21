@@ -12,4 +12,8 @@ impl ContainerRoutesName {
     pub const GET_CONTAINER_RESOURCE_USAGE_STATS_BY_ID: &'static str =
         r"/getContainerResourceUsageStatsById/{id}";
     pub const ARCHIVE_FILE_SYSTEM_OF_A_CONTAINER: &'static str = r"/fileSystem/{id}";
+    pub const START_A_CONTAINER: &'static str = r"/start/{id}";
+    pub const STOP_A_CONTAINER: &'static str = r"/stop/{id}";
+    pub const RESTART_A_CONTAINER: &'static str = r"/restart/{id}";
+    pub const DELETE_A_CONTAINER: &'static str = r"/delete/{id}";
 }

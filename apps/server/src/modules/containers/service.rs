@@ -12,6 +12,7 @@ use crate::{
 };
 use axum::response::sse::Event;
 use futures_util::{StreamExt, stream::BoxStream};
+use reqwest::StatusCode;
 use serde_json::Value;
 use std::convert::Infallible;
 use std::error::Error;
@@ -222,5 +223,49 @@ impl ContainerService {
         BroadcastStream::new(rx)
             .filter_map(|msg| async move { msg.ok().map(|s| Ok(Event::default().data(s))) })
             .boxed()
+    }
+
+    pub async fn start_container(&self, id: &str) -> Result<(), Box<dyn Error>> {
+        let endpoint = DockerEndpoints::START_A_CONTAINER.replace("{id}", id);
+        let url = format!("http://{}/{}{}", *HOST, *DOCKER_API_VERSION, endpoint);
+        let res = self.app_config.client.post(url).send().await?;
+        if !res.status().is_success() && res.status() != StatusCode::NOT_MODIFIED {
+            let err_text = res.text().await.unwrap_or_default();
+            return Err(format!("Docker start failed: {err_text}").into());
+        }
+        Ok(())
+    }
+
+    pub async fn stop_container(&self, id: &str) -> Result<(), Box<dyn Error>> {
+        let endpoint = DockerEndpoints::STOP_A_CONTAINER.replace("{id}", id);
+        let url = format!("http://{}/{}{}", *HOST, *DOCKER_API_VERSION, endpoint);
+        let res = self.app_config.client.post(url).send().await?;
+        if !res.status().is_success() && res.status() != StatusCode::NOT_MODIFIED {
+            let err_text = res.text().await.unwrap_or_default();
+            return Err(format!("Docker stop failed: {err_text}").into());
+        }
+        Ok(())
+    }
+
+    pub async fn restart_container(&self, id: &str) -> Result<(), Box<dyn Error>> {
+        let endpoint = DockerEndpoints::RESTART_A_CONTAINER.replace("{id}", id);
+        let url = format!("http://{}/{}{}", *HOST, *DOCKER_API_VERSION, endpoint);
+        let res = self.app_config.client.post(url).send().await?;
+        if !res.status().is_success() {
+            let err_text = res.text().await.unwrap_or_default();
+            return Err(format!("Docker restart failed: {err_text}").into());
+        }
+        Ok(())
+    }
+
+    pub async fn delete_container(&self, id: &str) -> Result<(), Box<dyn Error>> {
+        let endpoint = DockerEndpoints::DELETE_A_CONTAINER.replace("{id}", id);
+        let url = format!("http://{}/{}{}", *HOST, *DOCKER_API_VERSION, endpoint);
+        let res = self.app_config.client.delete(url).send().await?;
+        if !res.status().is_success() {
+            let err_text = res.text().await.unwrap_or_default();
+            return Err(format!("Docker delete failed: {err_text}").into());
+        }
+        Ok(())
     }
 }

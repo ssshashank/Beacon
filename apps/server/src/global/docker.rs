@@ -12,6 +12,10 @@ impl DockerEndpoints {
     pub const GET_CONTAINERS_RESOURSE_USAGE_STATS: &'static str = r"/containers/{id}/stats";
     pub const ARCHIVE_FILE_SYSTEM_RESOURCE_OF_A_CONTAINER: &'static str =
         r"/containers/{id}/archive?path=/";
+    pub const START_A_CONTAINER: &'static str = r"/containers/{id}/start";
+    pub const STOP_A_CONTAINER: &'static str = r"/containers/{id}/stop";
+    pub const RESTART_A_CONTAINER: &'static str = r"/containers/{id}/restart";
+    pub const DELETE_A_CONTAINER: &'static str = r"/containers/{id}?force=true";
 
     // Events Endpoints
     pub const STREAM_EVENTS: &'static str = r"/events";

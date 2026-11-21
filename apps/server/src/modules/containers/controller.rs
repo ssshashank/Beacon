@@ -105,4 +105,72 @@ impl ContainerController {
     ) -> Sse<impl futures_util::Stream<Item = Result<Event, Infallible>> + use<>> {
         Sse::new(self.service.stream_container_resource_usage(id).await)
     }
+
+    pub async fn start_container(&self, id: &str) -> Json<ResponseBody<Value>> {
+        match self.service.start_container(id).await {
+            Ok(_) => Json(ResponseBody::success(
+                StatusCode::OK,
+                serde_json::json!({ "id": id, "status": "started" }),
+            )),
+            Err(e) => {
+                eprintln!("Error starting container {id}: {e}");
+                Json(ResponseBody::error(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "START_CONTAINER_FAILED",
+                    e.to_string(),
+                ))
+            }
+        }
+    }
+
+    pub async fn stop_container(&self, id: &str) -> Json<ResponseBody<Value>> {
+        match self.service.stop_container(id).await {
+            Ok(_) => Json(ResponseBody::success(
+                StatusCode::OK,
+                serde_json::json!({ "id": id, "status": "stopped" }),
+            )),
+            Err(e) => {
+                eprintln!("Error stopping container {id}: {e}");
+                Json(ResponseBody::error(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "STOP_CONTAINER_FAILED",
+                    e.to_string(),
+                ))
+            }
+        }
+    }
+
+    pub async fn restart_container(&self, id: &str) -> Json<ResponseBody<Value>> {
+        match self.service.restart_container(id).await {
+            Ok(_) => Json(ResponseBody::success(
+                StatusCode::OK,
+                serde_json::json!({ "id": id, "status": "restarted" }),
+            )),
+            Err(e) => {
+                eprintln!("Error restarting container {id}: {e}");
+                Json(ResponseBody::error(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "RESTART_CONTAINER_FAILED",
+                    e.to_string(),
+                ))
+            }
+        }
+    }
+
+    pub async fn delete_container(&self, id: &str) -> Json<ResponseBody<Value>> {
+        match self.service.delete_container(id).await {
+            Ok(_) => Json(ResponseBody::success(
+                StatusCode::OK,
+                serde_json::json!({ "id": id, "status": "deleted" }),
+            )),
+            Err(e) => {
+                eprintln!("Error deleting container {id}: {e}");
+                Json(ResponseBody::error(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "DELETE_CONTAINER_FAILED",
+                    e.to_string(),
+                ))
+            }
+        }
+    }
 }
