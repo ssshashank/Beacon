@@ -19,6 +19,7 @@ export interface ContainerDTO {
   status?: ContainerStatusType;
   kind?: ContainerKindType;
   labels?: any;
+  ports?: PortMappingDTO[];
 }
 
 // Mirrors server/src/global/dto.rs ResponseBody<T>

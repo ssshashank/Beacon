@@ -114,11 +114,11 @@ function getTextColor(level: LogLevel): string {
 export default function ContainerLogs(props: any) {
   const [logs, setLogs] = createSignal<ContainerLogsDTO[]>([]);
   const [isAtBottom, setIsAtBottom] = createSignal(true);
-  let containerRef: HTMLDivElement | undefined;
+  let containerRef: HTMLDivElement | undefined = undefined;
 
   const scrollToBottom = () => {
     if (containerRef) {
-      containerRef.scrollTop = containerRef.scrollHeight;
+      containerRef.scrollTop = containerRef?.scrollHeight;
     }
   };
 
@@ -194,10 +194,15 @@ export default function ContainerLogs(props: any) {
         class="rounded-md bg-[#0A0A0B] h-full p-3 overflow-y-auto space-y-0.5 font-mono text-xs text-gray-300 select-text"
       >
         <For each={logs()} fallback={<div class="text-neutral-500 p-2 text-center text-xs">No logs found</div>}>
-          {(item) => {
+          {(item, index) => {
             const parsed = parseLogLine(item.message, item.stream);
             return (
               <div class="flex items-start hover:bg-neutral-900/60 py-0.5 px-2 rounded leading-5 group transition-colors">
+                {/* Index Number */}
+                <span class="text-neutral-600 select-none text-[11px] w-9 text-right shrink-0 tabular-nums pr-2">
+                  {index() + 1}.
+                </span>
+
                 {/* Left Column: Stream & Timestamp */}
                 <div class="flex items-center gap-2 w-48 shrink-0 select-none text-[11px]">
                   <span

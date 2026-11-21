@@ -23,7 +23,8 @@ export const formatContainerData = (containers: ContainerDetailDTO[]): ComposeDT
       name: d?.name?.replace("/", ""),
       image: d?.image?.name,
       status: d?.status,
-      labels: d?.label
+      labels: d?.label,
+      ports: d?.ports
     });
   }
 
