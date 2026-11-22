@@ -13,7 +13,7 @@ export default function ContainerStats(props: any) {
   const [cpuCores, setCpuCores] = createSignal<number>(0);
   const [currentPids, setCurrentPids] = createSignal(0);
   const [pidsLimit, setPidsLimit] = createSignal(0);
-  const [isConnected, setIsConnected] = createSignal(false);
+  const [_, setIsConnected] = createSignal(false);
 
   let previousDisk:
     | {

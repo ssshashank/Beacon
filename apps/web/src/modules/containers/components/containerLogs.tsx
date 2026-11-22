@@ -114,7 +114,7 @@ function getTextColor(level: LogLevel): string {
 export default function ContainerLogs(props: any) {
   const [logs, setLogs] = createSignal<ContainerLogsDTO[]>([]);
   const [isAtBottom, setIsAtBottom] = createSignal(true);
-  let containerRef: HTMLDivElement | undefined = undefined;
+  let containerRef: HTMLDivElement | any = undefined;
 
   const scrollToBottom = () => {
     if (containerRef) {

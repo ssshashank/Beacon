@@ -26,8 +26,11 @@ fn transform_exec_log(raw: &str) -> Option<Event> {
         );
     }
     let msg = val["message"].as_str()?;
-    let exec = parse_ls_line(msg)?;
-    Some(Event::default().data(exec.to_json().to_string()))
+    if let Some(exec) = parse_ls_line(msg) {
+        Some(Event::default().data(exec.to_json().to_string()))
+    } else {
+        Some(Event::default().data(raw.to_string()))
+    }
 }
 
 pub struct ExecService {

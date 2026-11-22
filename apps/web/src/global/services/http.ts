@@ -41,7 +41,7 @@ class ApiFactory {
         }
     }
 
-    static post<T = any>(url: string, data: any, configParams?: ApiFactoryConfig) {
+    static post<T = any>(url: string, data?: any, configParams?: ApiFactoryConfig) {
         return ApiFactory.request<T>({ method: 'POST', url, data }, configParams!);
     }
 
