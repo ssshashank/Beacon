@@ -7,7 +7,7 @@ use axum::Router;
 use axum::http::{HeaderValue, Method, header};
 use tokio::sync::broadcast;
 use tokio_util::sync::CancellationToken;
-use tower_http::cors::CorsLayer;
+use tower_http::cors::{AllowOrigin, CorsLayer};
 
 // Wires config + modules + routes together
 pub fn build_app() -> (Router, CancellationToken) {
@@ -23,8 +23,18 @@ pub fn build_app() -> (Router, CancellationToken) {
 
     let modules = modules::init_modules(app);
 
+    let origin = CORS_ORIGIN_ALLOWED_ENDPOINT.trim();
+    let allow_origin = if origin == "*" || origin.is_empty() {
+        AllowOrigin::mirror_request()
+    } else {
+        match origin.parse::<HeaderValue>() {
+            Ok(val) => AllowOrigin::exact(val),
+            Err(_) => AllowOrigin::mirror_request(),
+        }
+    };
+
     let cors = CorsLayer::new()
-        .allow_origin(CORS_ORIGIN_ALLOWED_ENDPOINT.parse::<HeaderValue>().unwrap())
+        .allow_origin(allow_origin)
         .allow_methods([
             Method::GET,
             Method::POST,
@@ -35,5 +45,28 @@ pub fn build_app() -> (Router, CancellationToken) {
         .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION])
         .allow_credentials(true);
 
-    (routes::build_routes(&modules).layer(cors), shutdown)
+    let app_router = routes::build_routes(&modules)
+        .layer(cors)
+        .layer(axum::middleware::from_fn(log_requests));
+
+    (app_router, shutdown)
+}
+
+async fn log_requests(
+    req: axum::extract::Request,
+    next: axum::middleware::Next,
+) -> axum::response::Response {
+    let method = req.method().clone();
+    let path = req.uri().path().to_string();
+    let start = std::time::Instant::now();
+    let res = next.run(req).await;
+    let elapsed = start.elapsed();
+    let status = res.status().as_u16();
+
+    if path.starts_with("/api/") {
+        let now = chrono::Utc::now().to_rfc3339();
+        println!("{now} [INFO ] [beacon::api] {method} {path} -> {status} ({elapsed:?})");
+    }
+
+    res
 }
