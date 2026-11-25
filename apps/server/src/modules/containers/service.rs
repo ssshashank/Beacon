@@ -3,7 +3,6 @@ use crate::{
     global::{
         config::{DOCKER_API_VERSION, HOST},
         docker::DockerEndpoints,
-        utils,
     },
     modules::containers::{
         dto::{Container, Process},
@@ -44,7 +43,7 @@ impl ContainerService {
     }
 
     // Get all containers service
-    pub async fn get_all_containers(&self) -> Result<Vec<Container>, Box<dyn std::error::Error>> {
+    pub async fn get_all_containers(&self) -> Result<Vec<Container>, Box<dyn Error>> {
         // format the docker api endpoints
         let url = format!(
             "http://{}/{}{}",
@@ -190,21 +189,30 @@ impl ContainerService {
         &self,
         id: &str,
     ) -> Result<Value, Box<dyn Error>> {
-        utils::call_end_points(
-            &self.app_config.client,
-            DockerEndpoints::GET_CHANGES_ON_CONTAINER_FILE_SYSYTEM,
-            Some(id),
-        )
-        .await
+        // format the docker api endpoints
+        let endpoint = DockerEndpoints::GET_CHANGES_ON_CONTAINER_FILE_SYSYTEM.replace("{id}", id);
+        let url = format!("http://{}/{}{}", *HOST, *DOCKER_API_VERSION, endpoint);
+
+        let res = self.app_config.client.get(url).send().await?;
+        let json: Value = res.json().await?;
+        let _ = json["Processes"]
+            .as_array()
+            .ok_or_else(|| "Expected docker response must be an array")?;
+
+        Ok(json)
     }
 
     pub async fn export_a_container(&self, id: &str) -> Result<Value, Box<dyn Error>> {
-        utils::call_end_points(
-            &self.app_config.client,
-            DockerEndpoints::EXPORT_A_CONTAINER,
-            Some(id),
-        )
-        .await
+        let endpoint = DockerEndpoints::EXPORT_A_CONTAINER.replace("{id}", id);
+        let url = format!("http://{}/{}{}", *HOST, *DOCKER_API_VERSION, endpoint);
+
+        let res = self.app_config.client.get(url).send().await?;
+        let json: Value = res.json().await?;
+        let _ = json["Processes"]
+            .as_array()
+            .ok_or_else(|| "Expected docker response must be an array")?;
+
+        Ok(json)
     }
 
     // Stream container resource usage

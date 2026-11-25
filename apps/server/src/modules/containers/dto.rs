@@ -61,10 +61,20 @@ pub struct PortMapping {
 
 impl PortMapping {
     pub fn from_json(val: &Value) -> Option<Self> {
-        let container_port = val.get("container_port").and_then(Value::as_str)?.to_string();
-        let protocol = val.get("protocol").and_then(Value::as_str).unwrap_or("tcp").to_string();
+        let container_port = val
+            .get("container_port")
+            .and_then(Value::as_str)?
+            .to_string();
+        let protocol = val
+            .get("protocol")
+            .and_then(Value::as_str)
+            .unwrap_or("tcp")
+            .to_string();
         let host_ip = val.get("host_ip").and_then(Value::as_str).map(String::from);
-        let host_port = val.get("host_port").and_then(Value::as_str).map(String::from);
+        let host_port = val
+            .get("host_port")
+            .and_then(Value::as_str)
+            .map(String::from);
         Some(PortMapping {
             host_ip,
             host_port,
@@ -85,10 +95,26 @@ pub struct ContainerMountInfo {
 
 impl ContainerMountInfo {
     pub fn from_json(val: &Value) -> Option<Self> {
-        let source = val.get("source").and_then(Value::as_str).unwrap_or("").to_string();
-        let destination = val.get("destination").and_then(Value::as_str).unwrap_or("").to_string();
-        let r#type = val.get("type").and_then(Value::as_str).unwrap_or("").to_string();
-        let mode = val.get("mode").and_then(Value::as_str).unwrap_or("").to_string();
+        let source = val
+            .get("source")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_string();
+        let destination = val
+            .get("destination")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_string();
+        let r#type = val
+            .get("type")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_string();
+        let mode = val
+            .get("mode")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_string();
         let rw = val.get("rw").and_then(Value::as_bool).unwrap_or(true);
         Some(ContainerMountInfo {
             source,
@@ -131,7 +157,9 @@ impl Container {
         };
 
         let mounts = if let Some(arr) = json.get("mounts").and_then(Value::as_array) {
-            arr.iter().filter_map(ContainerMountInfo::from_json).collect()
+            arr.iter()
+                .filter_map(ContainerMountInfo::from_json)
+                .collect()
         } else {
             Vec::new()
         };

@@ -5,4 +5,6 @@ impl ImageRoutesName {
     pub const INSPECT_IMAGE_BY_ID: &'static str = r"/inspectImage/{id}";
     pub const GET_IMAGE_ATTESTATION_BY_ID: &'static str = r"/getImageAttestation/{id}";
     pub const GET_IMAGE_HISTORY_BY_ID: &'static str = r"/getImageHistory/{id}";
+    pub const DELETE_IMAGE_BY_ID: &'static str = r"/delete/{id}";
+    pub const EXPORT_IMAGE_BY_ID: &'static str = r"/exportImageById/{id}";
 }

@@ -406,13 +406,23 @@ fn parse_tar_header_block(header: &[u8]) -> (String, String, u64, i64) {
     };
 
     let size_slice = &header[124..136];
-    let size_end = size_slice.iter().position(|&b| b == 0 || b == b' ').unwrap_or(12);
-    let size_str = std::str::from_utf8(&size_slice[..size_end]).unwrap_or("0").trim();
+    let size_end = size_slice
+        .iter()
+        .position(|&b| b == 0 || b == b' ')
+        .unwrap_or(12);
+    let size_str = std::str::from_utf8(&size_slice[..size_end])
+        .unwrap_or("0")
+        .trim();
     let size = u64::from_str_radix(size_str, 8).unwrap_or(0);
 
     let mtime_slice = &header[136..148];
-    let mtime_end = mtime_slice.iter().position(|&b| b == 0 || b == b' ').unwrap_or(12);
-    let mtime_str = std::str::from_utf8(&mtime_slice[..mtime_end]).unwrap_or("0").trim();
+    let mtime_end = mtime_slice
+        .iter()
+        .position(|&b| b == 0 || b == b' ')
+        .unwrap_or(12);
+    let mtime_str = std::str::from_utf8(&mtime_slice[..mtime_end])
+        .unwrap_or("0")
+        .trim();
     let mtime = i64::from_str_radix(mtime_str, 8).unwrap_or(0);
 
     (raw_name, kind, size, mtime)

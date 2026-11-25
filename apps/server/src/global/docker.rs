@@ -25,6 +25,8 @@ impl DockerEndpoints {
     pub const INSPECT_AN_IMAGE: &'static str = r"/images/{id}/json";
     pub const GET_ATTESTATION_STATEMENT_OF_AN_IMAGE: &'static str = r"/images/{id}/attestations";
     pub const GET_HISTORY_OF_AN_IMAGE: &'static str = r"/images/{id}/history";
+    pub const DELETE_AN_IMAGE: &'static str = r"/images/{id}?force=true";
+    pub const EXPORT_AN_IMAGE: &'static str = r"/images/{id}/get";
 
     // Exec Endpoints
     pub const INSPECT_AN_EXEC: &'static str = r"/exec/{id}/json";

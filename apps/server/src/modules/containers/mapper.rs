@@ -145,7 +145,11 @@ pub fn inspect_container_mapper(json: &Value) -> Value {
                 "rw": m.get("RW").and_then(Value::as_bool).unwrap_or(true),
             }));
         }
-    } else if let Some(binds) = json.get("HostConfig").and_then(|hc| hc.get("Binds")).and_then(Value::as_array) {
+    } else if let Some(binds) = json
+        .get("HostConfig")
+        .and_then(|hc| hc.get("Binds"))
+        .and_then(Value::as_array)
+    {
         for b in binds {
             if let Some(s) = b.as_str() {
                 let parts: Vec<&str> = s.split(':').collect();

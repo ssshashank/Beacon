@@ -53,10 +53,7 @@ pub fn routes(controller: Arc<ContainerController>) -> Router {
             ContainerRoutesName::START_A_CONTAINER,
             post(start_container),
         )
-        .route(
-            ContainerRoutesName::STOP_A_CONTAINER,
-            post(stop_container),
-        )
+        .route(ContainerRoutesName::STOP_A_CONTAINER, post(stop_container))
         .route(
             ContainerRoutesName::RESTART_A_CONTAINER,
             post(restart_container),

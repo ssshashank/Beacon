@@ -22,7 +22,7 @@ pub fn init_modules(app_config: AppConfig) -> Modules {
     let container_controller = Arc::new(ContainerController::new(container_service));
     let event_service = EventService::new(app_config.clone());
     let event_controller = Arc::new(EventController::new(event_service));
-    let image_service = ImageService::new(app_config.client.clone());
+    let image_service = ImageService::new(app_config.clone());
     let image_controller = Arc::new(ImageController::new(image_service));
     let exec_service = ExecService::new(app_config.clone());
     let exec_controller = Arc::new(ExecController::new(exec_service));
