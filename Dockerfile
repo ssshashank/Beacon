@@ -19,31 +19,44 @@ ENV VITE_BASE_URL=/api/v1
 RUN bun run build
 
 # ==============================================================================
-# Stage 2: Build Rust Backend
+# Stage 2: Build Rust Backend (Statically linked with musl)
 # ==============================================================================
 FROM rust:1.97.1-slim AS server-builder
 
 WORKDIR /app
 
+# Install musl tools and ca-certificates
+RUN apt-get update && apt-get install -y --no-install-recommends musl-tools ca-certificates && rm -rf /var/lib/apt/lists/*
+
 # Copy cargo manifests and source
 COPY Cargo.toml Cargo.lock ./
 COPY apps/server ./apps/server
 
-# Build release binary
-RUN cargo build --release -p beacon
+# Build static release binary targeting musl
+RUN TARGET="$(uname -m)-unknown-linux-musl" && \
+    rustup target add "$TARGET" && \
+    cargo build --release -p beacon --target "$TARGET" && \
+    cp target/"$TARGET"/release/beacon /app/beacon
 
 # ==============================================================================
-# Stage 3: Minimal Runtime
+# Stage 3: Minimal Runtime (scratch)
 # ==============================================================================
-FROM debian:trixie-slim
+FROM scratch
+
+LABEL org.opencontainers.image.title="Beacon" \
+      org.opencontainers.image.description="A lightweight, high-performance Docker monitoring & management tool built with Rust and SolidJS." \
+      org.opencontainers.image.url="https://beacon-logs.vercel.app/" \
+      org.opencontainers.image.source="https://github.com/M-Thousand/Beacon" \
+      org.opencontainers.image.version="0.1.0" \
+      org.opencontainers.image.licenses="MIT"
 
 WORKDIR /app
 
-# Install ca-certificates for secure outbound calls if needed
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
+# Copy CA certificates for outbound HTTPS calls
+COPY --from=server-builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
 # Copy compiled backend binary
-COPY --from=server-builder /app/target/release/beacon /app/beacon
+COPY --from=server-builder /app/beacon /app/beacon
 
 # Copy compiled frontend assets
 COPY --from=web-builder /app/apps/web/dist/client /app/dist/client
