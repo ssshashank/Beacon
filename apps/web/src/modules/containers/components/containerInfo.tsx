@@ -7,9 +7,8 @@ import { PortsIcon } from "../../../global/components/_icons/ports";
 import { EjectIcon } from "../../../global/components/_icons/eject";
 
 function ContainerAbout(props: any) {
-
   return (
-    <div class='h-fit rounded bg-[#151619] p-3'>
+    <div class='h-fit rounded bg-[#151619] p-3 min-w-0'>
       <div class='flex items-center justify-start gap-3 border-b-[0.03px] pb-3 border-neutral-700'>
         <InfoIcons size={14} color="#3277f8" />
         <span class='text-md font-medium'>About</span>
@@ -19,7 +18,7 @@ function ContainerAbout(props: any) {
           <span class='text-gray-400'>
             Name:
           </span>
-          <span>
+          <span title={props.container()?.name}>
             {props.container()?.name}
           </span>
         </div>
@@ -27,7 +26,7 @@ function ContainerAbout(props: any) {
           <span class='text-gray-400'>
             ID:
           </span>
-          <span class="truncate [direction:rtl] text-left max-w-[100px]">
+          <span class="truncate [direction:rtl] text-left max-w-[150px]" title={props.container()?.id}>
             &lrm;{props.container()?.id}
           </span>
         </div>
@@ -35,7 +34,7 @@ function ContainerAbout(props: any) {
           <span class='text-gray-400'>
             Image:
           </span>
-          <span>
+          <span title={props.container()?.image?.name}>
             {truncateLabel("image", props.container()?.image?.name as string)}
           </span>
         </div>
@@ -43,7 +42,7 @@ function ContainerAbout(props: any) {
           <span class='text-gray-400'>
             Command:
           </span>
-          <span class="truncate max-w-[150px]">
+          <span class="truncate max-w-[200px]" title={props.container()?.command}>
             {props.container()?.command}
           </span>
         </div>
@@ -72,22 +71,34 @@ function ContainerAbout(props: any) {
 }
 
 function ContainerLabels(props: any) {
-
   return (
-    <div class='h-fit rounded bg-[#151619] p-3'>
+    <div class='h-fit rounded bg-[#151619] p-3 min-w-0'>
       <div class='flex items-center justify-start gap-3 border-b-[0.03px] pb-3 border-neutral-700'>
         <TagsIcon size={14} color="#f8ac29" />
         <span class='text-md font-medium'>Labels</span>
       </div>
       <div class="text-gray-200 pt-2">
-        <For each={Object.entries(props.container()?.label ?? {})}>
-          {([key, value]) => (
-            <div class='flex items-start justify-between py-1 gap-2'>
-              <span class='text-gray-400 w-[50%]'>{truncateLabel(key, key as string)}</span>
-              <span class='w-[50%]' >{truncateLabel(key, value as string)}</span>
-            </div>
-          )}
-        </For>
+        <Show
+          when={Object.keys(props.container()?.label ?? {}).length > 0}
+          fallback={<p class="text-neutral-500 py-2 text-center">No labels found</p>}
+        >
+          <div class='grid grid-cols-2 gap-4 py-1 text-gray-400 font-medium'>
+            <span>Key</span>
+            <span class="text-right">Value</span>
+          </div>
+          <For each={Object.entries(props.container()?.label ?? {})}>
+            {([key, value]) => (
+              <div class='grid grid-cols-2 gap-4 py-1'>
+                <span class='text-gray-400 break-all' title={key}>
+                  {key}
+                </span>
+                <span class='text-right truncate' title={value as string}>
+                  {truncateLabel(key, value as string)}
+                </span>
+              </div>
+            )}
+          </For>
+        </Show>
       </div>
     </div>
   );
@@ -132,7 +143,7 @@ function ContainerPortForward(props: any) {
   });
 
   return (
-    <div class='h-fit rounded bg-[#151619] p-3'>
+    <div class='h-fit rounded bg-[#151619] p-3 min-w-0'>
       <div class='flex items-center justify-start gap-3 border-b-[0.03px] pb-3 border-neutral-700'>
         <PortsIcon size={14} color="#82f969" />
         <span class='text-md font-medium'>Port Forwards</span>
@@ -140,19 +151,19 @@ function ContainerPortForward(props: any) {
       <div class="text-gray-200 pt-2">
         <Show
           when={ports().length > 0}
-          fallback={<p class="text-xs text-neutral-500 py-2 text-center">No port forwards found</p>}
+          fallback={<p class="text-neutral-500 py-2 text-center">No port forwards found</p>}
         >
-          <div class='flex items-center justify-between py-1 text-gray-400 text-xs font-medium'>
+          <div class='grid grid-cols-3 gap-2 py-1 text-gray-400 font-medium'>
             <span>Host Port</span>
-            <span>ContainerPort</span>
-            <span>Protocol</span>
+            <span class="text-center">ContainerPort</span>
+            <span class="text-right">Protocol</span>
           </div>
           <For each={ports()}>
             {(port) => (
-              <div class='flex items-center justify-between py-1 text-xs'>
-                <span class='text-blue-500 font-mono'>{port.hostPort}</span>
-                <span class='font-mono'>{port.containerPort}</span>
-                <span class='text-neutral-400 uppercase text-[11px]'>{port.protocol}</span>
+              <div class='grid grid-cols-3 gap-2 py-1 items-center'>
+                <span class='text-blue-500'>{port.hostPort}</span>
+                <span class='text-center'>{port.containerPort}</span>
+                <span class='text-neutral-400 uppercase text-right'>{port.protocol}</span>
               </div>
             )}
           </For>
@@ -185,7 +196,7 @@ function ContainerMount(props: any) {
   });
 
   return (
-    <div class='h-fit rounded bg-[#151619] p-3'>
+    <div class='h-fit rounded bg-[#151619] p-3 min-w-0'>
       <div class='flex items-center justify-start gap-3 border-b-[0.03px] pb-3 border-neutral-700'>
         <EjectIcon size={14} color="#EB3362" />
         <span class='text-md font-medium'>Mounts</span>
@@ -193,19 +204,19 @@ function ContainerMount(props: any) {
       <div class="text-gray-200 pt-2">
         <Show
           when={mounts().length > 0}
-          fallback={<p class="text-xs text-neutral-500 py-2 text-center">No mounts found</p>}
+          fallback={<p class="text-neutral-500 py-2 text-center">No mounts found</p>}
         >
-          <div class='flex items-center justify-between py-1 text-gray-400 text-xs font-medium'>
-            <span>Sources</span>
-            <span>Destination</span>
+          <div class='grid grid-cols-2 gap-4 py-1 text-gray-400 font-medium'>
+            <span>Source</span>
+            <span class="text-right">Destination</span>
           </div>
           <For each={mounts()}>
             {(mount) => (
-              <div class='flex items-center justify-between py-1 text-xs gap-4'>
-                <span class='text-blue-400 font-mono truncate max-w-[50%]' title={mount.source}>
+              <div class='grid grid-cols-2 gap-4 py-1 items-center'>
+                <span class='text-blue-400 truncate' title={mount.source}>
                   {mount.source}
                 </span>
-                <span class='font-mono truncate max-w-[50%]' title={mount.destination}>
+                <span class='text-right truncate text-gray-300' title={mount.destination}>
                   {mount.destination}
                 </span>
               </div>
@@ -218,45 +229,40 @@ function ContainerMount(props: any) {
 }
 
 export default function ContainerInfo(props: any) {
-
   return (
     <div class="rounded-md bg-[#0A0A0B] h-full overflow-y-auto">
-      <div class='p-1 grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-2 gap-y-2 items-start'>
-        <div class='grid gap-y-2'>
-          <Loading
-            fallback={
-              <h1>
-                About Loading...
-              </h1>
-            }>
-            <ContainerAbout container={props.container} />
-          </Loading>
-          <Loading
-            fallback={
-              <h1>
-                Port forward Loading...
-              </h1>
-            }>
-            <ContainerPortForward container={props.container} />
-          </Loading>
-          <Loading
-            fallback={
-              <h1>
-                Mount Loading...
-              </h1>
-            }>
-            <ContainerMount container={props.container} />
-          </Loading>
-        </div>
-        <div>
-          <Loading
-            fallback={
-              <h1>Labels loading...
-              </h1>
-            }>
-            <ContainerLabels container={props.container} />
-          </Loading>
-        </div>
+      <div class='p-1 grid grid-cols-1 gap-2 items-start w-full min-w-0'>
+        <Loading
+          fallback={
+            <h1>
+              About Loading...
+            </h1>
+          }>
+          <ContainerAbout container={props.container} />
+        </Loading>
+        <Loading
+          fallback={
+            <h1>
+              Port forward Loading...
+            </h1>
+          }>
+          <ContainerPortForward container={props.container} />
+        </Loading>
+        <Loading
+          fallback={
+            <h1>
+              Mount Loading...
+            </h1>
+          }>
+          <ContainerMount container={props.container} />
+        </Loading>
+        <Loading
+          fallback={
+            <h1>Labels loading...
+            </h1>
+          }>
+          <ContainerLabels container={props.container} />
+        </Loading>
       </div>
     </div>
   );

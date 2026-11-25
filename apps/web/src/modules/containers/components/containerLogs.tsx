@@ -191,23 +191,25 @@ export default function ContainerLogs(props: any) {
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        class="rounded-md bg-[#0A0A0B] h-full p-3 overflow-y-auto space-y-0.5 font-mono text-xs text-gray-300 select-text"
+        class="rounded-md bg-[#0A0A0B] h-full p-3 overflow-y-auto space-y-1 text-sm text-gray-300 select-text"
       >
-        <For each={logs()} fallback={<div class="text-neutral-500 p-2 text-center text-xs">No logs found</div>}>
+        <For each={logs()} fallback={<div class="text-neutral-500 p-2 text-center text-sm">No logs found</div>}>
           {(item, index) => {
             const parsed = parseLogLine(item.message, item.stream);
             return (
-              <div class="flex items-start hover:bg-neutral-900/60 py-0.5 px-2 rounded leading-5 group transition-colors">
+              <div class="flex items-start hover:bg-neutral-900/60 py-0.5 px-2 rounded leading-relaxed group transition-colors">
                 {/* Index Number */}
-                <span class="text-neutral-600 select-none text-[11px] w-9 text-right shrink-0 tabular-nums pr-2">
+                <span class="text-neutral-600 select-none text-xs w-9 text-right shrink-0 tabular-nums pr-2 pt-0.5">
                   {index() + 1}.
                 </span>
 
                 {/* Left Column: Stream & Timestamp */}
-                <div class="flex items-center gap-2 w-48 shrink-0 select-none text-[11px]">
+                <div class="flex items-center gap-2 w-[180px] shrink-0 select-none text-xs">
                   <span
-                    class={`font-semibold tracking-wider ${
-                      parsed.stream === "stderr" ? "text-red-400" : "text-sky-400"
+                    class={`px-1.5 py-0.2 rounded text-[11px] font-medium border tracking-wider ${
+                      parsed.stream === "stderr"
+                        ? "border-red-500/40 bg-red-500/10 text-red-400"
+                        : "border-green-500/40 bg-green-500/10 text-green-400"
                     }`}
                   >
                     {(parsed.stream || "stdout").toUpperCase()}
@@ -219,13 +221,13 @@ export default function ContainerLogs(props: any) {
 
                 {/* Vertical Divider Bar */}
                 <div
-                  class={`w-[2px] self-stretch min-h-[18px] mx-2 shrink-0 rounded-full ${getBarColor(
+                  class={`w-[2px] self-stretch min-h-[20px] mx-2 shrink-0 rounded-full ${getBarColor(
                     parsed.level
                   )}`}
                 />
 
                 {/* Right Column: Log Message */}
-                <div class={`break-all whitespace-pre-wrap flex-1 ${getTextColor(parsed.level)}`}>
+                <div class={`break-all whitespace-pre-wrap flex-1 text-sm ${getTextColor(parsed.level)}`}>
                   {parsed.message}
                 </div>
               </div>
@@ -240,7 +242,7 @@ export default function ContainerLogs(props: any) {
             scrollToBottom();
             setIsAtBottom(true);
           }}
-          class="absolute bottom-4 right-6 bg-olive-600 hover:bg-neutral-800 text-neutral-300 text-xs px-3 py-1.5 rounded-md shadow-lg border border-neutral-700 flex items-center gap-1.5 transition-all cursor-pointer">
+          class="absolute bottom-12 md:bottom-4 right-6 bg-gray-800/40 hover:bg-gray-700/50 backdrop-blur-lg text-neutral-200 hover:text-white text-xs px-3 py-1.5 rounded-md shadow-xl border border-white/10 flex items-center gap-1.5 transition-all cursor-pointer">
           <span>↓ Jump to latest</span>
         </button>
       </Show>

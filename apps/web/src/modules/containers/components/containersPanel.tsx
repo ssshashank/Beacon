@@ -13,25 +13,17 @@ import { LinkIcon } from "../../../global/components/_icons/link";
 import { Accordion, AccordionItem } from "../../../global/components/_common/accordion";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../../global/components/_common/tabs";
 import { ContainerStatus } from "../constant";
-import type { ComposeDTO, ContainerDTO, PortMappingDTO } from "../types";
+import type { ComposeDTO, ContainerDTO, ContainerStatusType, PortMappingDTO } from "../types";
 import allContainersSvg from "~/assets/_svgs/allContainers.svg";
 import activeContainersSvg from "~/assets/_svgs/activeContainers.svg";
 import { isSidebarRouteActive } from "../../../global/utils/route";
 import { StatusDot } from "../../../global/components/_common/statusDot";
-
-function Spinner(props: { size?: number }) {
-  const s = props.size ?? 13;
-  return (
-    <svg class="animate-spin text-neutral-400" width={s} height={s} viewBox="0 0 24 24" fill="none">
-      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" />
-      <path
-        class="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-      />
-    </svg>
-  );
-}
+import {
+  SidebarPanelHeader,
+  SidebarEmptyState,
+  SidebarListItem,
+  SidebarActionButton,
+} from "../../../global/components/_common/sidebarPanel";
 
 function ComposeList(props: {
   composes: ComposeDTO[];
@@ -63,12 +55,8 @@ function ComposeList(props: {
   return (
     <Show
       when={props.composes.length > 0}
-      fallback={
-        <div class="flex flex-col items-center justify-center gap-2 py-10 px-4 text-center">
-          <img src={props.emptyIcon} class="w-28 h-28 opacity-80" />
-          <p class="text-sm text-gray-500">{props.emptyMessage}</p>
-        </div>
-      }>
+      fallback={<SidebarEmptyState icon={props.emptyIcon} message={props.emptyMessage} />}
+    >
       <Accordion class="mt-2">
         <For each={props?.composes}>
           {(compose) => {
@@ -94,42 +82,34 @@ function ComposeList(props: {
                     {/* Compose-level controls */}
                     <div class="flex items-center gap-1 shrink-0 ml-2" onClick={(e) => e.stopPropagation()}>
                       <Show
-                        when={!isGroupLoading()}
+                        when={hasRunning()}
                         fallback={
-                          <div class="p-1 flex items-center justify-center">
-                            <Spinner size={13} />
-                          </div>
+                          <SidebarActionButton
+                            title={`Start all in ${compose.label}`}
+                            variant="success"
+                            loading={isGroupLoading()}
+                            onClick={(e) => props.onStartGroup(e, compose)}
+                          >
+                            <PlayIcon size={13} />
+                          </SidebarActionButton>
                         }>
-                        <Show
-                          when={hasRunning()}
-                          fallback={
-                            <button
-                              type="button"
-                              title={`Start all in ${compose.label}`}
-                              onClick={(e) => props.onStartGroup(e, compose)}
-                              class="p-1 rounded text-neutral-400 hover:text-emerald-400 hover:bg-neutral-800 transition-colors cursor-pointer">
-                              <PlayIcon size={13} />
-                            </button>
-                          }>
-                          <button
-                            type="button"
-                            title={`Stop all in ${compose.label}`}
-                            onClick={(e) => props.onStopGroup(e, compose)}
-                            class="p-1 rounded text-neutral-400 hover:text-amber-400 hover:bg-neutral-800 transition-colors cursor-pointer">
-                            <StopIcon size={13} />
-                          </button>
-                        </Show>
+                        <SidebarActionButton
+                          title={`Stop all in ${compose.label}`}
+                          variant="warning"
+                          loading={isGroupLoading()}
+                          onClick={(e) => props.onStopGroup(e, compose)}
+                        >
+                          <StopIcon size={13} />
+                        </SidebarActionButton>
                       </Show>
-                      <button
-                        type="button"
+                      <SidebarActionButton
                         title={`Delete all in ${compose.label}`}
+                        variant="danger"
                         disabled={isGroupLoading()}
-                        onClick={(e) => !isGroupLoading() && props.onDeleteGroup(e, compose)}
-                        class={`p-1 rounded text-neutral-400 hover:text-red-400 hover:bg-neutral-800 transition-colors cursor-pointer ${
-                          isGroupLoading() ? "opacity-30 cursor-not-allowed pointer-events-none" : ""
-                        }`}>
+                        onClick={(e) => props.onDeleteGroup(e, compose)}
+                      >
                         <TrashIcon size={13} />
-                      </button>
+                      </SidebarActionButton>
                     </div>
                   </div>
                 }>
@@ -147,101 +127,65 @@ function ComposeList(props: {
                       );
 
                       return (
-                        <li
+                        <SidebarListItem
+                          isActive={isActive()}
                           onClick={() =>
                             navigate(`/containers/${c?.id}`, {
                               state: { container: c, color: hexColor() },
                             })
                           }
-                          class={`p-1 cursor-pointer group/row ${
-                            index() < (compose?.containers?.length ?? 0) - 1
-                              ? "border-b-[0.03px] border-neutral-800"
-                              : ""
-                          }`}>
-                          <div
-                            class={`p-2 rounded-md flex items-center justify-between gap-2 ${
-                              isActive() ? "bg-[#3B3B3B80]" : "hover:bg-neutral-900/60"
-                            }`}>
-                            <div class="flex items-center gap-3 min-w-0 flex-1">
-                              {/* Dimmed icon if stopped / exited / paused */}
-                              <div
-                                class="h-8 w-8 rounded flex items-center justify-center shrink-0 transition-opacity"
-                                style={{
-                                  color: hexColor(),
-                                  opacity: isRunning() ? "1" : "0.45",
-                                }}>
-                                <BoxIcons size={16} />
-                              </div>
-                              {/* Grayish text if stopped / exited / paused */}
-                              <div class="min-w-0 flex-1">
-                                <p
-                                  class={`text-sm truncate transition-colors ${
-                                    isRunning() ? "text-white" : "text-neutral-400"
-                                  }`}>
-                                  {c.name}
-                                </p>
-                                <p
-                                  class={`truncate text-xs transition-colors ${
-                                    isRunning() ? "text-gray-500" : "text-neutral-600"
-                                  }`}>
-                                  {c?.image}
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* OrbStack container actions & status */}
-                            <div class="flex items-center gap-1 shrink-0 ml-2">
+                          isLast={index() < (compose?.containers?.length ?? 0) - 1 ? false : true}
+                          color={hexColor()}
+                          dimmed={!isRunning()}
+                          icon={<BoxIcons size={16} />}
+                          title={c.name}
+                          subtitle={c?.image}
+                          actions={
+                            <>
                               {/* Port forward link */}
                               <Show when={isRunning() && hasPorts()}>
-                                <button
-                                  type="button"
+                                <SidebarActionButton
                                   title="Open port in browser"
+                                  variant="info"
                                   onClick={(e) => handleOpenPort(e, c.ports)}
-                                  class="p-1 rounded text-neutral-400 hover:text-blue-400 hover:bg-neutral-800 transition-colors cursor-pointer">
+                                >
                                   <LinkIcon size={13} />
-                                </button>
+                                </SidebarActionButton>
                               </Show>
 
                               {/* Start / Stop toggle with loading spinner */}
                               <Show
-                                when={!isContainerLoading()}
+                                when={isRunning()}
                                 fallback={
-                                  <div class="p-1 flex items-center justify-center">
-                                    <Spinner size={13} />
-                                  </div>
-                                }>
-                                <Show
-                                  when={isRunning()}
-                                  fallback={
-                                    <button
-                                      type="button"
-                                      title="Start container"
-                                      onClick={(e) => props.onStart(e, c.id)}
-                                      class="p-1 rounded text-neutral-400 hover:text-emerald-400 hover:bg-neutral-800 transition-colors cursor-pointer">
-                                      <PlayIcon size={13} />
-                                    </button>
-                                  }>
-                                  <button
-                                    type="button"
-                                    title="Stop container"
-                                    onClick={(e) => props.onStop(e, c.id)}
-                                    class="p-1 rounded text-neutral-400 hover:text-amber-400 hover:bg-neutral-800 transition-colors cursor-pointer">
-                                    <StopIcon size={13} />
-                                  </button>
-                                </Show>
+                                  <SidebarActionButton
+                                    title="Start container"
+                                    variant="success"
+                                    loading={isContainerLoading()}
+                                    onClick={(e) => props.onStart(e, c.id)}
+                                  >
+                                    <PlayIcon size={13} />
+                                  </SidebarActionButton>
+                                }
+                              >
+                                <SidebarActionButton
+                                  title="Stop container"
+                                  variant="warning"
+                                  loading={isContainerLoading()}
+                                  onClick={(e) => props.onStop(e, c.id)}
+                                >
+                                  <StopIcon size={13} />
+                                </SidebarActionButton>
                               </Show>
 
                               {/* Delete container */}
-                              <button
-                                type="button"
+                              <SidebarActionButton
                                 title="Delete container"
-                                disabled={isContainerLoading()}
-                                onClick={(e) => !isContainerLoading() && props.onDelete(e, c.id, c.name)}
-                                class={`p-1 rounded text-neutral-400 hover:text-red-400 hover:bg-neutral-800 transition-colors cursor-pointer ${
-                                  isContainerLoading() ? "opacity-30 cursor-not-allowed pointer-events-none" : ""
-                                }`}>
+                                variant="danger"
+                                loading={isContainerLoading()}
+                                onClick={(e) => props.onDelete(e, c.id, c.name)}
+                              >
                                 <TrashIcon size={13} />
-                              </button>
+                              </SidebarActionButton>
 
                               {/* Status dot */}
                               <Show when={isRunning()}>
@@ -249,9 +193,9 @@ function ComposeList(props: {
                                   <StatusDot status={c?.status ?? ContainerStatus.RUNNING} size={8} />
                                 </span>
                               </Show>
-                            </div>
-                          </div>
-                        </li>
+                            </>
+                          }
+                        />
                       );
                     }}
                   </For>
@@ -478,32 +422,26 @@ export default function ContainersSidebarPanel(props: any) {
   return (
     <div class="flex-1 h-full p-2">
       <div class="h-full">
-        <div class="border-b-[0.03px] border-neutral-800 pb-2 flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span class="text-md font-medium text-white">{props.label ?? "Containers"}</span>
-            <Show when={totalContainersCount() > 0}>
-              <span class="text-[11px] px-1.5 py-0.5 rounded font-mono bg-neutral-800 text-neutral-400">
-                {totalRunningCount()} running
-              </span>
-            </Show>
-          </div>
-        </div>
-        <Tabs defaultValue="all">
+        <SidebarPanelHeader
+          title={props.label ?? "Containers"}
+          badge={totalContainersCount() > 0 ? `${totalRunningCount()} running` : undefined}
+        />
+        <Tabs defaultValue="running">
           <TabsList style="mt-3 bg-[#151619] p-1 rounded-md gap-1" indicatorStyle="bg-[#3B3B3B80]">
-            <TabsTrigger value="all" style="flex-1 flex flex-row items-center justify-center gap-1.5 text-center">
-              <span class="text-blue-300">All</span>
-              <Show when={totalContainersCount() > 0}>
-                <span class="text-[10px] opacity-75 font-mono text-blue-300/80">({totalContainersCount()})</span>
-              </Show>
-            </TabsTrigger>
             <TabsTrigger value="running" style="flex-1 flex flex-row items-center justify-center gap-1.5 text-center">
               <span class="text-green-300">Running</span>
               <Show when={totalContainersCount() > 0}>
                 <span class="text-[10px] opacity-75 font-mono text-green-300/80">({totalRunningCount()})</span>
               </Show>
             </TabsTrigger>
+            <TabsTrigger value="all" style="flex-1 flex flex-row items-center justify-center gap-1.5 text-center">
+              <span class="text-blue-300">All</span>
+              <Show when={totalContainersCount() > 0}>
+                <span class="text-[10px] opacity-75 font-mono text-blue-300/80">({totalContainersCount()})</span>
+              </Show>
+            </TabsTrigger>
             <TabsTrigger value="exited" style="flex-1 flex flex-row items-center justify-center gap-1.5 text-center">
-              <span class="text-red-300">Exited</span>
+              <span class="text-red-300">Closed</span>
               <Show when={totalContainersCount() > 0}>
                 <span class="text-[10px] opacity-75 font-mono text-red-300/80">
                   ({totalContainersCount() - totalRunningCount()})

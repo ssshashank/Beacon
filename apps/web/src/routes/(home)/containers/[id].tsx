@@ -18,21 +18,21 @@ const LazyContainerProcesses = lazy(() => import("../../../modules/containers/co
 export default function ContainerByIDScreen() {
   const params = useParams();
   const location: any = useLocation();
-  const container = createMemo(() => inspectContainerByIDQuery(params?.id!));
+  const container = createMemo(() => inspectContainerByIDQuery(params?.id ?? ""));
 
   return (
     <main class='w-full h-full p-2 flex flex-col'>
       <div class='border-b-[0.03px] border-neutral-700 pb-2 shrink-0'>
         <div>
           <div class='flex items-center justify-start gap-3'>
-            <StatusDot status={container()?.status!} size={10} />
+            <StatusDot status={container()?.status as any} size={10} />
             <div>
               <span style={{ color: location?.state?.color }} class='text-md'>
                 {location?.state?.container?.name ?? container()?.name}
               </span>
               &nbsp;&nbsp;/&nbsp;&nbsp;
               <span class="text-gray-500">
-                {container()?.image?.name!}
+                {container()?.image?.name}
               </span>
               <div class='flex items-center justify-start gap-3 cursor-pointer'>
                 <span class='text-xs text-gray-600'>
@@ -49,21 +49,21 @@ export default function ContainerByIDScreen() {
       <div class='flex-1 min-h-0'>
         <div class="h-full flex flex-col">
           <Tabs defaultValue="info" >
-            <div class='w-auto'>
-              <TabsList style="mt-1 bg-[#0A0A0B] p-1 rounded-md gap-1" indicatorStyle="bg-[#3B3B3B80]">
-                <TabsTrigger value="info" style="flex-1 flex flex-row items-center justify-center gap-3 text-center">
+            <div class='w-fit'>
+              <TabsList style="mt-1 bg-[#0A0A0B] p-1 rounded-md gap-1 w-fit" indicatorStyle="bg-[#3B3B3B80]">
+                <TabsTrigger value="info" style="flex flex-row items-center justify-center gap-3 text-center">
                   <span>Info</span>
                 </TabsTrigger>
-                <TabsTrigger value="stats" style="flex-1 flex flex-row items-center justify-center gap-3 text-center">
+                <TabsTrigger value="stats" style="flex flex-row items-center justify-center gap-3 text-center">
                   <span>Stats</span>
                 </TabsTrigger>
-                <TabsTrigger value="logs" style="flex-1 flex flex-row items-center justify-center gap-3 text-center">
+                <TabsTrigger value="logs" style="flex flex-row items-center justify-center gap-3 text-center">
                   <span>Logs</span>
                 </TabsTrigger>
-                <TabsTrigger value="files" style="flex-1 flex flex-row items-center justify-center gap-3 text-center">
+                <TabsTrigger value="files" style="flex flex-row items-center justify-center gap-3 text-center">
                   <span>Files</span>
                 </TabsTrigger>
-                <TabsTrigger value="processes" style="flex-1 flex flex-row items-center justify-center gap-3 text-center">
+                <TabsTrigger value="processes" style="flex flex-row items-center justify-center gap-3 text-center">
                   <span>Processes</span>
                 </TabsTrigger>
               </TabsList>

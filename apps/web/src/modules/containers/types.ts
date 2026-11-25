@@ -39,6 +39,11 @@ export interface ImageDTO {
   os: string;
   local_digest?: string | null;
   size: number;
+  created?: number | null;
+  repo_tags?: string[];
+  repo_digests?: string[];
+  containers?: number;
+  labels?: Record<string, string>;
 }
 
 // Mirrors server/src/modules/containers/dto.rs PortMapping

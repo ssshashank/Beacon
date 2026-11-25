@@ -22,7 +22,7 @@ function isSidebarRouteActive(pathname: string, route: string): boolean {
   const target = normalizePath(route);
 
   if (target === '/images') {
-    return current === '/images';
+    return current === '/images' || current.startsWith("/images/");
   }
 
   if (target === '/containers') {

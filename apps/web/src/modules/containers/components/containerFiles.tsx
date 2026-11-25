@@ -222,19 +222,19 @@ function FileTreeRow(props: FileTreeRowProps) {
           </Show>
 
           <span
-            class={`font-mono text-xs ${isFolder() ? "text-neutral-100 font-medium" : "text-neutral-300"
+            class={`text-sm ${isFolder() ? "text-neutral-100 font-medium" : "text-neutral-300"
               }`}>
             {props.item.name}
           </span>
         </td>
 
-        <td class="py-2 pr-4 text-neutral-400 text-xs whitespace-nowrap">
+        <td class="py-2 pr-4 text-neutral-400 text-sm whitespace-nowrap">
           {props.item.modified_date || "-"}
         </td>
-        <td class="py-2 pr-4 text-neutral-400 text-xs whitespace-nowrap">
+        <td class="py-2 pr-4 text-neutral-400 text-sm whitespace-nowrap">
           {props.item.size || "-"}
         </td>
-        <td class="py-2 text-neutral-400 text-xs whitespace-nowrap">
+        <td class="py-2 text-neutral-400 text-sm whitespace-nowrap">
           {props.item.kind || "-"}
         </td>
       </tr>
@@ -247,7 +247,7 @@ function FileTreeRow(props: FileTreeRowProps) {
             <tr>
               <td
                 colspan={4}
-                class="py-1 text-neutral-500 text-xs italic"
+                class="py-1 text-neutral-500 text-sm italic"
                 style={{ "padding-left": `${(props.level + 1) * 18 + 8}px` }}>
                 Loading...
               </td>
@@ -259,7 +259,7 @@ function FileTreeRow(props: FileTreeRowProps) {
               <tr>
                 <td
                   colspan={4}
-                  class="py-1 text-neutral-500 text-xs italic"
+                  class="py-1 text-neutral-500 text-sm italic"
                   style={{ "padding-left": `${(props.level + 1) * 18 + 8}px` }}>
                   Empty folder
                 </td>

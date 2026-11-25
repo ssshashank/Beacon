@@ -62,7 +62,7 @@ export function DiskIOStats(props: any) {
   });
 
   return (
-    <div class='h-fit rounded bg-[#151619] p-3'>
+    <div class='h-fit rounded bg-[#151619] p-3 min-w-0'>
       <div class='flex items-start justify-between gap-3'>
         <div class='flex items-center justify-between gap-3'>
           <DiskIOIcons size={14} color='#FF788D' />

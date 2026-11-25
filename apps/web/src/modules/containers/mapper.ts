@@ -31,20 +31,14 @@ export const formatContainerData = (containers: ContainerDetailDTO[]): ComposeDT
   return Array.from(composeMap.values());
 };
 
-export const truncateLabel = (key: string, value: string) => {
-  const shouldTruncate =
-    key.includes("hash") ||
-    key.includes("image") ||
-    key.includes("config_files") ||
-    key.includes("id") ||
-    key.includes("revision");
-
-  if (!shouldTruncate || value.length <= 24) {
+export const truncateLabel = (_key: string, value: string) => {
+  if (!value) return "";
+  if (value.length <= 48) {
     return value;
   }
 
-  return `${value.slice(0, 12)}...${value.slice(-8)}`;
-}
+  return `${value.slice(0, 24)}...${value.slice(-12)}`;
+};
 
 // Memory Stats Formatter
 export function formatMemoryStats(data: any) {

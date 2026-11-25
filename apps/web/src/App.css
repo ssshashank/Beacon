@@ -122,8 +122,8 @@
   /* ---------------------------------------------------------------------
      Typography
      --------------------------------------------------------------------- */
-  --font-sans: 'Iosevka Charon', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'SF Mono', 'JetBrains Mono', ui-monospace, monospace;
+  --font-sans: 'Iosevka Charon', 'Iosevka', monospace;
+  --font-mono: 'Iosevka Charon', 'Iosevka', monospace;
 
   --text-xs: 0.75rem;
   /* 12px — timestamps, sidebar section labels */
@@ -206,7 +206,8 @@
    ========================================================================== */
 @layer base {
   body {
-    @apply m-0 min-h-screen bg-bg-base text-text-primary font-sans text-base font-normal leading-normal;
+    @apply m-0 min-h-screen bg-bg-base text-text-primary text-base font-normal leading-normal;
+    font-family: var(--font-sans);
     word-break: break-word;
   }
 
