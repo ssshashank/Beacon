@@ -61,12 +61,24 @@ pub fn list_container_mapper(json: &Value) -> Value {
     if let Some(arr) = json.get("Mounts").and_then(Value::as_array) {
         for m in arr {
             mounts.push(json!({
+                "name": m.get("Name").and_then(Value::as_str),
                 "source": m.get("Source").and_then(Value::as_str).unwrap_or(""),
                 "destination": m.get("Destination").and_then(Value::as_str).unwrap_or(""),
                 "type": m.get("Type").and_then(Value::as_str).unwrap_or(""),
                 "mode": m.get("Mode").and_then(Value::as_str).unwrap_or(""),
                 "rw": m.get("RW").and_then(Value::as_bool).unwrap_or(true),
             }));
+        }
+    }
+
+    let mut networks: Vec<String> = Vec::new();
+    if let Some(obj) = json
+        .get("NetworkSettings")
+        .and_then(|ns| ns.get("Networks"))
+        .and_then(Value::as_object)
+    {
+        for (net_name, _) in obj {
+            networks.push(net_name.clone());
         }
     }
 
@@ -87,6 +99,7 @@ pub fn list_container_mapper(json: &Value) -> Value {
         "created_at": json["Created"],
         "ports": ports,
         "mounts": mounts,
+        "networks": networks,
     })
 }
 
@@ -138,6 +151,7 @@ pub fn inspect_container_mapper(json: &Value) -> Value {
     if let Some(arr) = json.get("Mounts").and_then(Value::as_array) {
         for m in arr {
             mounts.push(json!({
+                "name": m.get("Name").and_then(Value::as_str),
                 "source": m.get("Source").and_then(Value::as_str).unwrap_or(""),
                 "destination": m.get("Destination").and_then(Value::as_str).unwrap_or(""),
                 "type": m.get("Type").and_then(Value::as_str).unwrap_or(""),

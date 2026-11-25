@@ -1,5 +1,5 @@
 use crate::bootstrap::modules::Modules;
-use crate::modules::{containers, events, exec, images};
+use crate::modules::{containers, events, exec, images, networks, system, volumes};
 use axum::Router;
 
 const API_V1: &str = "/api/v1";
@@ -13,7 +13,13 @@ pub fn build_routes(modules: &Modules) -> Router {
         )
         .nest("/events", events::routes::routes(modules.events.clone()))
         .nest("/images", images::routes::routes(modules.images.clone()))
-        .nest("/exec", exec::routes::routes(modules.exec.clone()));
+        .nest("/exec", exec::routes::routes(modules.exec.clone()))
+        .nest("/volumes", volumes::routes::routes(modules.volumes.clone()))
+        .nest("/system", system::routes::routes(modules.system.clone()))
+        .nest(
+            "/networks",
+            networks::routes::routes(modules.networks.clone()),
+        );
 
     Router::new().nest(API_V1, v1)
 }

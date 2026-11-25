@@ -33,4 +33,20 @@ impl DockerEndpoints {
     pub const CREATE_AN_EXEC: &'static str = r"/containers/{id}/exec";
     pub const START_AN_EXEC: &'static str = r"/exec/{id}/start";
     pub const RESIZE_AN_EXEC: &'static str = r"/exec/{id}/resize";
+
+    // Volumes Endpoints
+    pub const LIST_VOLUMES: &'static str = r"/volumes";
+    pub const INSPECT_A_VOLUME: &'static str = r"/volumes/{name}";
+    pub const DELETE_A_VOLUME: &'static str = r"/volumes/{name}?force=true";
+
+    // System Endpoints
+    pub const GET_SYSTEM_DF: &'static str = r"/system/df";
+    pub const GET_SYSTEM_INFO: &'static str = r"/info";
+    pub const GET_SYSTEM_VERSION: &'static str = r"/version";
+    pub const PING_SYSTEM: &'static str = r"/_ping";
+
+    // Networks Endpoints
+    pub const LIST_NETWORKS: &'static str = r"/networks";
+    pub const INSPECT_A_NETWORK: &'static str = r"/networks/{id}";
+    pub const DELETE_A_NETWORK: &'static str = r"/networks/{id}";
 }

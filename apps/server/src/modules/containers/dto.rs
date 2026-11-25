@@ -86,6 +86,7 @@ impl PortMapping {
 
 #[derive(Debug, Serialize, Clone)]
 pub struct ContainerMountInfo {
+    pub name: Option<String>,
     pub source: String,
     pub destination: String,
     pub r#type: String,
@@ -95,6 +96,11 @@ pub struct ContainerMountInfo {
 
 impl ContainerMountInfo {
     pub fn from_json(val: &Value) -> Option<Self> {
+        let name = val
+            .get("name")
+            .or_else(|| val.get("Name"))
+            .and_then(Value::as_str)
+            .map(String::from);
         let source = val
             .get("source")
             .and_then(Value::as_str)
@@ -117,6 +123,7 @@ impl ContainerMountInfo {
             .to_string();
         let rw = val.get("rw").and_then(Value::as_bool).unwrap_or(true);
         Some(ContainerMountInfo {
+            name,
             source,
             destination,
             r#type,
@@ -145,6 +152,7 @@ pub struct Container {
     pub deleted_at: Option<DateTime<Utc>>,
     pub ports: Vec<PortMapping>,
     pub mounts: Vec<ContainerMountInfo>,
+    pub networks: Vec<String>,
 }
 
 impl Container {
@@ -159,6 +167,15 @@ impl Container {
         let mounts = if let Some(arr) = json.get("mounts").and_then(Value::as_array) {
             arr.iter()
                 .filter_map(ContainerMountInfo::from_json)
+                .collect()
+        } else {
+            Vec::new()
+        };
+
+        let networks = if let Some(arr) = json.get("networks").and_then(Value::as_array) {
+            arr.iter()
+                .filter_map(Value::as_str)
+                .map(String::from)
                 .collect()
         } else {
             Vec::new()
@@ -188,6 +205,7 @@ impl Container {
                 .and_then(|s| s.parse::<DateTime<Utc>>().ok()),
             ports,
             mounts,
+            networks,
         };
     }
 
@@ -211,6 +229,7 @@ impl Container {
             "deleted_at": self.deleted_at,
             "ports": self.ports,
             "mounts": self.mounts,
+            "networks": self.networks,
             }
         );
     }
