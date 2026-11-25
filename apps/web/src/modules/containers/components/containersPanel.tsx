@@ -137,7 +137,7 @@ function ComposeList(props: {
                           isLast={index() < (compose?.containers?.length ?? 0) - 1 ? false : true}
                           color={hexColor()}
                           dimmed={!isRunning()}
-                          icon={<BoxIcons size={16} />}
+                          icon={<BoxIcons size={24} />}
                           title={c.name}
                           subtitle={c?.image}
                           actions={
@@ -424,6 +424,7 @@ export default function ContainersSidebarPanel(props: any) {
       <div class="h-full">
         <SidebarPanelHeader
           title={props.label ?? "Containers"}
+          subtitle={totalContainersCount() > 0 ? `${totalContainersCount()} total` : undefined}
           badge={totalContainersCount() > 0 ? `${totalRunningCount()} running` : undefined}
         />
         <Tabs defaultValue="running">

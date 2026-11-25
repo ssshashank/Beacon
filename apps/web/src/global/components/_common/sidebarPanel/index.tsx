@@ -4,22 +4,30 @@ import { Spinner } from "../spinner";
 
 export interface SidebarPanelHeaderProps {
   title: string;
+  subtitle?: string | JSX.Element;
   badge?: string | number | JSX.Element;
   children?: JSX.Element;
 }
 
 export function SidebarPanelHeader(props: SidebarPanelHeaderProps) {
   return (
-    <div class="border-b-[0.03px] border-neutral-800 pb-2 flex items-center justify-between">
-      <div class="flex items-center gap-2">
+    <div class="border-b-[0.03px] border-neutral-800 pb-2 flex items-start justify-between gap-2">
+      <div class="min-w-0">
         <span class="text-md font-medium text-white">{props.title}</span>
+        <Show when={props.subtitle}>
+          <div class="text-[11px] text-neutral-500 font-mono mt-0.5">
+            {props.subtitle}
+          </div>
+        </Show>
+      </div>
+      <div class="flex items-center gap-2 shrink-0 pt-0.5">
         <Show when={props.badge !== undefined && props.badge !== null}>
           <span class="text-[11px] px-1.5 py-0.5 rounded font-mono bg-neutral-800 text-neutral-400">
             {props.badge}
           </span>
         </Show>
+        {props.children}
       </div>
-      {props.children}
     </div>
   );
 }

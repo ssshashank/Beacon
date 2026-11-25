@@ -12,6 +12,15 @@ export interface ComposeDTO {
   version?: string;
 }
 
+export interface ContainerMountDTO {
+  name?: string;
+  source: string;
+  destination: string;
+  type?: string;
+  mode?: string;
+  rw?: boolean;
+}
+
 export interface ContainerDTO {
   id: string;
   name: string;
@@ -20,6 +29,8 @@ export interface ContainerDTO {
   kind?: ContainerKindType;
   labels?: any;
   ports?: PortMappingDTO[];
+  mounts?: ContainerMountDTO[];
+  networks?: string[];
 }
 
 // Mirrors server/src/global/dto.rs ResponseBody<T>

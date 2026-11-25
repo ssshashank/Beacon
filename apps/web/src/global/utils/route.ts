@@ -29,6 +29,14 @@ function isSidebarRouteActive(pathname: string, route: string): boolean {
     return current === '/containers' || current.startsWith("/containers/");
   }
 
+  if (target === '/volumes') {
+    return current === '/volumes' || current.startsWith("/volumes/");
+  }
+
+  if (target === '/networks') {
+    return current === '/networks' || current.startsWith("/networks/");
+  }
+
   // if (target === '/bench') {
   //   return current === '/bench' || current.startsWith('//spaces/');
   // }

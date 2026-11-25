@@ -43,7 +43,7 @@ export default function ImageByIDScreen() {
     return subId().slice(0, 12);
   });
 
-  const [autoColor] = createBGColorGenerator(imageName());
+  const [autoColor] = createBGColorGenerator(() => imageName());
   const titleColor = () => location?.state?.color || autoColor();
 
   const containers = createMemo(() => listContainersQuery() ?? []);

@@ -68,7 +68,7 @@ function ImageList(props: {
                 isLast={index() === props.images.length - 1}
                 color={hexColor()}
                 dimmed={!inUse()}
-                icon={<LayersIcon size={16} color={hexColor()} />}
+                icon={<LayersIcon size={24} color={hexColor()} />}
                 title={displayName()}
                 subtitle={`${tagText()} · ${sizeText()}`}
                 actions={
@@ -182,6 +182,16 @@ export default function ImagesSidebarPanel(props: any) {
   const inUsedImages = createMemo(() => images().filter(isImageInUse));
   const unUsedImages = createMemo(() => images().filter((img) => !isImageInUse(img)));
 
+  const totalImageSize = createMemo(() => {
+    let total = 0;
+    for (const img of images()) {
+      if (img.size && img.size > 0) {
+        total += img.size;
+      }
+    }
+    return formatBytes(total);
+  });
+
   const handleDelete = async (e: MouseEvent, id: string, name: string) => {
     e.stopPropagation();
     if (confirm(`Are you sure you want to delete image "${name}"?`)) {
@@ -202,6 +212,7 @@ export default function ImagesSidebarPanel(props: any) {
       <div class="h-full">
         <SidebarPanelHeader
           title={props.label ?? "Images"}
+          subtitle={images().length > 0 ? `${totalImageSize()} total` : undefined}
           badge={images().length > 0 ? `${inUsedImages().length} in use` : undefined}
         />
         <Tabs defaultValue="inUsed">
