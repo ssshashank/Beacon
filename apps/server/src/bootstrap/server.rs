@@ -26,6 +26,10 @@ pub async fn run(app: Router, shutdown: CancellationToken) {
     println!("{now} [INFO ] [beacon::core] Initialized in single-container mode");
     println!("{now} [INFO ] [beacon::docker] Connected to Docker socket at /var/run/docker.sock");
     println!("{now} [INFO ] [beacon::http] Server running on http://{addr}");
+    println!(
+        "{now} [INFO ] [beacon::web] Dashboard available at http://localhost:{}",
+        *config::PORT
+    );
     println!("{now} [INFO ] [beacon::stream] Live SSE event bus and telemetry channels ready");
 
     axum::serve(listener, app)
