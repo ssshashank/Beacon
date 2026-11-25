@@ -1,4 +1,4 @@
-const BASE_URL=import.meta.env.VITE_BASE_URL;
+const BASE_URL = import.meta.env.VITE_BASE_URL || '/api/v1';
 
 const HTTPStatusCode = {
   OK: 200,

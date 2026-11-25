@@ -33,12 +33,6 @@ declare module "virtual:file-routes" {
   /** The flat route manifest, in scan order. */
   const routes: readonly [
     {
-      path: "/";
-      page: true;
-      $component: FileRouteLazyRef<typeof import("./src/routes/index")>;
-      $$route?: undefined;
-    },
-    {
       path: "/(home)";
       page: true;
       $component: FileRouteLazyRef<typeof import("./src/routes/(home)")>;
@@ -51,33 +45,9 @@ declare module "virtual:file-routes" {
       $$route: FileRouteEagerRef<typeof import("./src/routes/[...404]")>;
     },
     {
-      path: "/(home)/images/";
+      path: "/";
       page: true;
-      $component: FileRouteLazyRef<typeof import("./src/routes/(home)/images/index")>;
-      $$route?: undefined;
-    },
-    {
-      path: "/(home)/images/:id";
-      page: true;
-      $component: FileRouteLazyRef<typeof import("./src/routes/(home)/images/[id]")>;
-      $$route?: undefined;
-    },
-    {
-      path: "/(home)/networks/";
-      page: true;
-      $component: FileRouteLazyRef<typeof import("./src/routes/(home)/networks/index")>;
-      $$route?: undefined;
-    },
-    {
-      path: "/(home)/networks/:id";
-      page: true;
-      $component: FileRouteLazyRef<typeof import("./src/routes/(home)/networks/[id]")>;
-      $$route?: undefined;
-    },
-    {
-      path: "/(home)/containers/";
-      page: true;
-      $component: FileRouteLazyRef<typeof import("./src/routes/(home)/containers/index")>;
+      $component: FileRouteLazyRef<typeof import("./src/routes/index")>;
       $$route?: undefined;
     },
     {
@@ -87,15 +57,45 @@ declare module "virtual:file-routes" {
       $$route?: undefined;
     },
     {
-      path: "/(home)/volumes/";
+      path: "/(home)/containers/";
       page: true;
-      $component: FileRouteLazyRef<typeof import("./src/routes/(home)/volumes/index")>;
+      $component: FileRouteLazyRef<typeof import("./src/routes/(home)/containers/index")>;
+      $$route?: undefined;
+    },
+    {
+      path: "/(home)/images/:id";
+      page: true;
+      $component: FileRouteLazyRef<typeof import("./src/routes/(home)/images/[id]")>;
+      $$route?: undefined;
+    },
+    {
+      path: "/(home)/images/";
+      page: true;
+      $component: FileRouteLazyRef<typeof import("./src/routes/(home)/images/index")>;
+      $$route?: undefined;
+    },
+    {
+      path: "/(home)/networks/:id";
+      page: true;
+      $component: FileRouteLazyRef<typeof import("./src/routes/(home)/networks/[id]")>;
+      $$route?: undefined;
+    },
+    {
+      path: "/(home)/networks/";
+      page: true;
+      $component: FileRouteLazyRef<typeof import("./src/routes/(home)/networks/index")>;
       $$route?: undefined;
     },
     {
       path: "/(home)/volumes/:id";
       page: true;
       $component: FileRouteLazyRef<typeof import("./src/routes/(home)/volumes/[id]")>;
+      $$route?: undefined;
+    },
+    {
+      path: "/(home)/volumes/";
+      page: true;
+      $component: FileRouteLazyRef<typeof import("./src/routes/(home)/volumes/index")>;
       $$route?: undefined;
     }
   ];
