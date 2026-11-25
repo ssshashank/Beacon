@@ -1,3 +1,11 @@
 [workspace]
 resolver = "3"
 members = ["apps/server"]
+
+[profile.release]
+opt-level = 3        # 0–3, "s", or "z" (size)
+lto = true           # Link-Time Optimization (false, true, "fat", or "thin")
+codegen-units = 1    # Fewer units allow better optimization, slower compiles
+panic = "abort"      # Smaller binary, skips unwinding
+strip = "symbols"    # Strips debug symbols/tables from the binary
+

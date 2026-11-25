@@ -6,6 +6,9 @@ run:
 build:
     cargo build -p beacon
 
+build-release-profile:
+    cargo build --release
+    
 check:
     cargo check -p beacon
 
@@ -30,7 +33,15 @@ web-build:
 
 # Compose run
 compose-up-dev:
+    docker compose -f docker-compose.dev.yml up beacon --build
+
+compose-up-dev-web:
+    docker compose -f docker-compose.dev.yml up web --build
+
+compose-up-dev-all:
     docker compose -f docker-compose.dev.yml up --build
+
+alias compose-up-all := compose-up-dev-all
 
 compose-up-prod:
     docker compose -f docker-compose.yml up --build -d

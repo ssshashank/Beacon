@@ -19,6 +19,23 @@ services:
     env_file:
       - .env.dev
 
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web.dev
+    image: beacon-web.dev
+    container_name: beacon_web_dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./apps/web:/app/apps/web
+      - /app/apps/web/node_modules
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - beacon
+
 volumes:
   cargo_registry:
   cargo_git:
