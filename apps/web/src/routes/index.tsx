@@ -1,14 +1,17 @@
-import { onSettled } from 'solid-js';
-import LandingPage from '../modules/landing/landingPage';
+import { createEffect } from "solid-js";
+import { useNavigate } from '@solidjs/router';
 
 export default function Home() {
-  onSettled(() => {
-    if (typeof document !== 'undefined') {
-      document.title = 'Beacon — Lightweight Docker Monitoring & Management';
-    }
-  });
+  const navigate = useNavigate();
 
-  return <LandingPage />;
+  createEffect(
+    () => { },
+    () => {
+      navigate("/containers", { replace: true });
+    }
+  );
+
+  return null;
 }
 
 

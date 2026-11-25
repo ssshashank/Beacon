@@ -104,3 +104,11 @@ web-dev:
 # Build web frontend for production (emits to apps/web/dist/client)
 web-build:
     cd apps/web && bun run build
+
+# Run marketing site dev server directly with Vite (http://localhost:3001)
+site-dev:
+    cd apps/site && bun run dev
+
+# Build marketing site for GitHub Pages (emits to apps/site/dist)
+site-build:
+    cd apps/site && bun run build
