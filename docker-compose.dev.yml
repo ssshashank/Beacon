@@ -16,8 +16,9 @@ services:
       - cargo_registry:/usr/local/cargo/registry
       - cargo_git:/usr/local/cargo/git
       - target_cache:/app/target
-    env_file:
-      - .env.dev
+    environment:
+      - PORT=8000
+      - DOCKER_API_VERSION=v1.51
 
   web:
     build:

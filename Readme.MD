@@ -78,26 +78,41 @@ just web-dev         # cd apps/web && bun run dev
 ### 4. Run everything with Docker Compose (dev)
 
 ```bash
-just compose-up-dev
+just dev-up
 ```
 
-This builds `Dockerfile.dev`, mounts the Docker socket and live source directories, and runs the server with hot-reload via `entrypoint.dev.sh`.
+This builds `Dockerfile.dev` and `Dockerfile.web.dev`, mounts live source directories and Docker socket, and runs the stack with hot-reload.
 
 ## Available Tasks (`justfile`)
 
+### Production Commands
 | Command | Description |
 |---|---|
-| `just run` | Run the server (`cargo run -p beacon`) |
-| `just build` | Build the server |
-| `just check` | Type-check the server |
-| `just clean` | Clean cargo build artifacts |
+| `just prod-up` | Start production single container in background (`just compose-up-prod`) |
+| `just prod-down` | Stop production container (`just compose-down-prod`) |
+| `just prod-logs` | Stream production container logs |
+| `just prod-build` | Build production Docker image directly |
+| `just prod-run` | Run production Docker container directly |
+
+### Development Commands (Docker)
+| Command | Description |
+|---|---|
+| `just dev-up` | Start full dev stack with hot-reload (`just compose-up-all`) |
+| `just dev-down` | Stop dev stack (`just compose-down-dev`) |
+| `just dev-logs` | Stream dev stack logs |
+| `just dev-up-backend` | Start only backend dev container |
+| `just dev-up-frontend` | Start only frontend dev container |
+
+### Local Tasks (Without Docker)
+| Command | Description |
+|---|---|
+| `just run` | Run server locally (`cargo run -p beacon`) |
+| `just build` / `just build-release` | Build server |
+| `just check` | Type-check server |
 | `just test` | Run server tests |
-| `just add-pkg <crate> [feature]` | Add a dependency to the server crate |
 | `just web-install` | Install web dependencies via Bun |
-| `just web-dev` | Start the web dev server |
-| `just web-build` | Build the web app for production |
-| `just compose-up-dev` / `just compose-down-dev` | Start/stop the dev Docker Compose stack |
-| `just compose-up-prod` / `just compose-down-prod` | Start/stop the production Docker Compose stack |
+| `just web-dev` | Start web dev server (Vite on :3000) |
+| `just web-build` | Build web frontend for production |
 
 ## API Overview
 
@@ -123,20 +138,29 @@ All routes are namespaced under `/api/v1`.
 
 ## Environment Variables
 
-| Variable | Description | Default |
-|---|---|---|
-| `PROJECT_NAME` | Display name of the project | `Beacon` |
-| `PORT` | Port the server listens on | `8000` |
-| `HOST` | Host/interface the server binds to | `0.0.0.0` |
+Beacon adopts a **zero-config** approach. All variables are optional with built-in defaults:
 
-Environment files:
-- `.env.default` — baseline example values
-- `.env.dev` — used by `docker-compose.dev.yml`
-- `.env` — local overrides (gitignored)
+| Variable | Legacy Alias | Description | Default |
+|---|---|---|---|
+| `BEACON_PORT` | `PORT` | Port the server listens on | `8000` |
+| `BEACON_HOST` | `HOST` | Host/interface the server binds to | `0.0.0.0` |
+| `BEACON_DOCKER_SOCKET` | `UNIX_SOCKET_PATH` | Path to Docker Unix socket | `/var/run/docker.sock` |
+| `BEACON_DOCKER_API_VERSION` | `DOCKER_API_VERSION` | Docker Engine API version | `v1.51` |
+| `BEACON_WEB_DIR` | `WEB_DIR` | Static web assets directory | `apps/web/dist/client` |
+| `BEACON_CORS_ORIGIN` | `CORS_ORIGIN_ALLOWED_ENDPOINT` | Allowed CORS origin (dev only) | `""` |
 
-## Docker
+## Docker Deployment (Single Container)
 
-Build and run in production mode:
+### Run with Docker CLI (Single Container)
+
+```bash
+docker run -d --name beacon \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -p 8000:8000 \
+  beacon:latest
+```
+
+### Run with Docker Compose
 
 ```bash
 docker compose -f docker-compose.yml up --build -d
