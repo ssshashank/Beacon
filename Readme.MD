@@ -1,189 +1,218 @@
-# Beacon
+<div align="center">
 
-Beacon is a lightweight Docker monitoring and management tool. A Rust (Axum) backend talks directly to the Docker Engine API over the Unix socket and exposes a clean REST/SSE interface, paired with a SolidJS web dashboard for browsing containers, images, and live Docker events.
+# Beacon ⚡
 
-## Features
+**A lightweight, high-performance Docker monitoring & management tool.**
 
-- **Container insights** — list containers, inspect metadata, view running processes, tail logs, diff the filesystem, export a container, and pull live resource usage stats.
-- **Live event stream** — subscribe to Docker's event feed over Server-Sent Events (SSE).
-- **Image management** — Docker image endpoints (in progress).
-- **Web dashboard** — a SolidJS single-page app for visualizing the above.
+[![Website](https://img.shields.io/badge/Website-beacon--logs.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://beacon-logs.vercel.app/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](./LICENSE)
+[![Rust](https://img.shields.io/badge/Rust-1.97+-DEA584?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
+[![SolidJS](https://img.shields.io/badge/SolidJS-2.0-2C4F7C?style=for-the-badge&logo=solid&logoColor=white)](https://www.solidjs.com/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 
-## Architecture
+<p align="center">
+  <a href="https://beacon-logs.vercel.app/"><strong>Explore the Live Landing Page »</strong></a>
+</p>
+
+</div>
+
+---
+
+## 🌟 Overview
+
+**Beacon** is built for developers who need fast, zero-fuss visibility into their Docker environment. 
+
+A high-performance **Rust (Axum)** backend communicates directly with the Docker Engine API over the Unix socket (`/var/run/docker.sock`) and exposes an optimized REST/SSE interface, paired with an ultra-responsive **SolidJS** dashboard.
+
+- **Zero-Config & Self-Contained:** No external databases, caches, or background agents required.
+- **Ultra Low Overhead:** Rust backend with sub-millisecond response times and minimal memory footprint.
+- **Real-Time Streaming:** Live log tailing, container resource stats, and Docker engine events via Server-Sent Events (SSE).
+
+---
+
+## ⚡ Quick Start (Run in 5 Seconds)
+
+Run Beacon instantly using Docker:
+
+```bash
+docker run -d \
+  --name beacon \
+  -p 8000:8000 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  beacon:latest
+```
+
+Open **[http://localhost:8000](http://localhost:8000)** in your browser to access the management dashboard.
+
+Or with Docker Compose:
+
+```bash
+docker compose up -d
+```
+
+---
+
+## ✨ Features
+
+- **📊 Container Management & Insights**
+  - List and inspect all containers with granular metadata.
+  - View live top processes inside running containers.
+  - Real-time log streaming and tailing.
+  - Live CPU, memory, network, and disk I/O metrics.
+  - Inspect filesystem diffs and export container filesystems.
+- **⚡ Live Event Feed**
+  - Real-time Server-Sent Events (SSE) stream reflecting Docker daemon events.
+- **📦 Images, Volumes & Networks**
+  - Browse images, tags, layers, networks, and volume attachments.
+- **🌐 Dedicated Marketing Site**
+  - Modern marketing and interactive showcase site hosted live at [https://beacon-logs.vercel.app/](https://beacon-logs.vercel.app/).
+
+---
+
+## 🏗️ Architecture
+
+Beacon is organized as a clean monorepo:
 
 ```
 beacon/
 ├── apps/
-│   ├── server/          # Rust (Axum) API server
+│   ├── server/          # High-performance Rust (Axum) API server
 │   │   └── src/
-│   │       ├── bootstrap/   # app wiring, module registry, router assembly
-│   │       ├── client/      # Docker socket client
-│   │       ├── config/      # app configuration (reqwest client, etc.)
-│   │       ├── global/      # shared config/docker/utils
-│   │       └── modules/     # feature modules: containers, images, events
-│   └── web/             # SolidJS + Vite frontend
-├── docker-compose.yml       # production compose
-├── docker-compose.dev.yml   # development compose (hot-reload via cargo run)
+│   │       ├── bootstrap/   # Router assembly and module registration
+│   │       ├── client/      # Unix socket client for Docker Engine API
+│   │       ├── config/      # Zero-config environment configuration
+│   │       ├── global/      # Shared utilities and error handlers
+│   │       └── modules/     # Feature modules (containers, images, events, etc.)
+│   ├── web/             # SolidJS + Vite management dashboard (bundled into Docker release)
+│   └── site/            # Standalone marketing landing site (hosted on Vercel)
+├── docker-compose.yml       # Production single-container compose
+├── docker-compose.dev.yml   # Dev compose with hot-reload
 ├── Dockerfile / Dockerfile.dev
-└── justfile              # task runner (see below)
+└── justfile              # Task automation
 ```
 
-The server talks to Docker by mounting `/var/run/docker.sock` into the container and issuing HTTP requests over it via `reqwest`.
+---
 
-## Tech Stack
+## 🛠️ Tech Stack
 
-| Layer     | Technology                              |
-|-----------|------------------------------------------|
-| Backend   | Rust, [Axum](https://github.com/tokio-rs/axum), Tokio, reqwest |
-| Frontend  | [SolidJS](https://www.solidjs.com/), Vite, TypeScript |
-| Package manager (web) | [Bun](https://bun.sh/) |
-| Task runner | [just](https://github.com/casey/just) |
-| Containerization | Docker / Docker Compose |
-| CI | GitHub Actions |
+| Layer | Technology | Purpose |
+|---|---|---|
+| **Backend** | Rust, [Axum](https://github.com/tokio-rs/axum), Tokio, reqwest | Low-latency async socket communication & REST/SSE API |
+| **Web Dashboard** | [SolidJS](https://www.solidjs.com/), Vite, Tailwind CSS | High-performance reactive UI bundled inside container (`:8000`) |
+| **Marketing Site** | SolidJS, Vite, Tailwind CSS v4 | Public website hosted at [beacon-logs.vercel.app](https://beacon-logs.vercel.app/) |
+| **Package Manager** | [Bun](https://bun.sh/) | Fast workspace dependency management |
+| **Task Runner** | [just](https://github.com/casey/just) | Convenient developer CLI recipes |
+| **Containerization** | Multi-stage Docker | Minimal Debian runtime producing an ultra-small image |
 
-## Prerequisites
+---
 
+## 💻 Local Development
+
+### Prerequisites
 - [Rust](https://www.rust-lang.org/tools/install) (2024 edition toolchain)
-- [Bun](https://bun.sh/) for the web app
-- [just](https://github.com/casey/just) (optional, but recommended for the commands below)
-- Docker, with access to `/var/run/docker.sock`
+- [Bun](https://bun.sh/) (v1.0+)
+- [just](https://github.com/casey/just) (recommended task runner)
+- Docker with access to `/var/run/docker.sock`
 
-## Getting Started
-
-### 1. Clone and configure
+### Setup
 
 ```bash
-git clone <repo-url>
-cd beacon
-cp .env.default .env   # adjust PROJECT_NAME / PORT as needed
+git clone https://github.com/ssshashank/Beacon.git
+cd Beacon
+cp .env.default .env
 ```
 
-### 2. Run the API server
+### Running Locally
 
 ```bash
-just run        # cargo run -p beacon
-# or without just:
-cargo run -p beacon
+# 1. Run the Rust backend (port 8000)
+just run
+
+# 2. Run the Web Dashboard dev server (port 3000)
+just web-install
+just web-dev
+
+# 3. Run the Marketing Site dev server (port 3001)
+just site-dev
 ```
 
-The server starts on the host/port defined in your `.env` file (defaults: `0.0.0.0:8000`).
-
-### 3. Run the web dashboard
-
-```bash
-just web-install    # bun install
-just web-dev         # cd apps/web && bun run dev
-```
-
-### 4. Run everything with Docker Compose (dev)
+### Full Dev Stack with Docker Hot-Reload
 
 ```bash
 just dev-up
 ```
+Mounts live source code and socket with hot-reloading for both backend and frontend.
 
-This builds `Dockerfile.dev` and `Dockerfile.web.dev`, mounts live source directories and Docker socket, and runs the stack with hot-reload.
+---
 
-## Available Tasks (`justfile`)
+## 📋 Available Commands (`justfile`)
 
-### Production Commands
 | Command | Description |
 |---|---|
-| `just prod-up` | Start production single container in background (`just compose-up-prod`) |
-| `just prod-down` | Stop production container (`just compose-down-prod`) |
+| **Production** | |
+| `just prod-up` | Start production single-container stack (`alias: compose-up-prod`) |
+| `just prod-down` | Stop production container (`alias: compose-down-prod`) |
 | `just prod-logs` | Stream production container logs |
-| `just prod-build` | Build production Docker image directly |
-| `just prod-run` | Run production Docker container directly |
-
-### Development Commands (Docker)
-| Command | Description |
-|---|---|
-| `just dev-up` | Start full dev stack with hot-reload (`just compose-up-all`) |
-| `just dev-down` | Stop dev stack (`just compose-down-dev`) |
-| `just dev-logs` | Stream dev stack logs |
+| `just prod-build` | Build production Docker image |
+| `just prod-run` | Run production container directly with socket mount |
+| **Development** | |
+| `just dev-up` | Start full dev stack with hot-reload |
+| `just dev-down` | Stop dev stack |
+| `just dev-logs` | View dev stack logs |
 | `just dev-up-backend` | Start only backend dev container |
-| `just dev-up-frontend` | Start only frontend dev container |
-
-### Local Tasks (Without Docker)
-| Command | Description |
-|---|---|
+| `just dev-up-frontend`| Start only frontend dev container |
+| **Frontend & Site** | |
+| `just web-dev` | Start dashboard dev server (Vite on `http://localhost:3000`) |
+| `just web-build` | Build dashboard assets for production (`apps/web/dist/client`) |
+| `just site-dev` | Start marketing site dev server (`http://localhost:3001`) |
+| `just site-build` | Build marketing site for Vercel/Pages (`apps/site/dist`) |
+| **Backend** | |
 | `just run` | Run server locally (`cargo run -p beacon`) |
-| `just build` / `just build-release` | Build server |
-| `just check` | Type-check server |
-| `just test` | Run server tests |
-| `just web-install` | Install web dependencies via Bun |
-| `just web-dev` | Start web dev server (Vite on :3000) |
-| `just web-build` | Build web frontend for production |
+| `just check` | Type-check Rust backend |
+| `just test` | Run Rust tests |
+| `just build-release` | Build optimized release binary |
 
-## API Overview
+---
 
-All routes are namespaced under `/api/v1`.
+## 📡 API Overview
+
+All API endpoints are namespaced under `/api/v1`.
 
 ### Containers — `/api/v1/containers`
 
 | Method | Path | Description |
 |---|---|---|
-| GET | `/getAllContainers` | List all containers |
-| GET | `/inspectContainer/{id}` | Inspect a container by ID |
-| GET | `/allProcessRunningInContainer/{id}` | List processes running inside a container |
-| GET | `/getContainerLogs/{id}` | Fetch container logs |
-| GET | `/getChangesOnContainerFileSystemById/{id}` | Get filesystem changes for a container |
-| GET | `/exportContainerById/{id}` | Export a container's filesystem |
-| GET | `/getContainerResourceUsageStatsById/{id}` | Get live resource usage stats |
+| `GET` | `/getAllContainers` | List all containers |
+| `GET` | `/inspectContainer/{id}` | Inspect container details |
+| `GET` | `/allProcessRunningInContainer/{id}` | List running processes inside container |
+| `GET` | `/getContainerLogs/{id}` | Stream container logs |
+| `GET` | `/getChangesOnContainerFileSystemById/{id}` | Get container filesystem changes |
+| `GET` | `/exportContainerById/{id}` | Export container filesystem |
+| `GET` | `/getContainerResourceUsageStatsById/{id}` | Live CPU, memory, and I/O stats |
 
 ### Events — `/api/v1/events`
 
 | Method | Path | Description |
 |---|---|---|
-| GET | `/streamEvents` | Server-Sent Events stream of Docker events |
+| `GET` | `/streamEvents` | Server-Sent Events (SSE) feed of Docker engine events |
 
-## Environment Variables
+---
 
-Beacon adopts a **zero-config** approach. All variables are optional with built-in defaults:
+## ⚙️ Environment Variables
 
-| Variable | Legacy Alias | Description | Default |
-|---|---|---|---|
-| `BEACON_PORT` | `PORT` | Port the server listens on | `8000` |
-| `BEACON_HOST` | `HOST` | Host/interface the server binds to | `0.0.0.0` |
-| `BEACON_DOCKER_SOCKET` | `UNIX_SOCKET_PATH` | Path to Docker Unix socket | `/var/run/docker.sock` |
-| `BEACON_DOCKER_API_VERSION` | `DOCKER_API_VERSION` | Docker Engine API version | `v1.51` |
-| `BEACON_WEB_DIR` | `WEB_DIR` | Static web assets directory | `apps/web/dist/client` |
-| `BEACON_CORS_ORIGIN` | `CORS_ORIGIN_ALLOWED_ENDPOINT` | Allowed CORS origin (dev only) | `""` |
+Beacon runs zero-config by default. You can customize runtime behaviors via environment variables:
 
-## Docker Deployment (Single Container)
+| Variable | Description | Default |
+|---|---|---|
+| `BEACON_PORT` | Port the HTTP server binds to | `8000` |
+| `BEACON_HOST` | Network interface to listen on | `0.0.0.0` |
+| `BEACON_DOCKER_SOCKET` | Path to Docker Unix domain socket | `/var/run/docker.sock` |
+| `BEACON_DOCKER_API_VERSION` | Docker Engine API version | `v1.51` |
+| `BEACON_WEB_DIR` | Static dashboard assets directory | `apps/web/dist/client` |
+| `BEACON_CORS_ORIGIN` | Allowed CORS origin (for local development) | `""` |
 
-### Run with Docker CLI (Single Container)
+---
 
-```bash
-docker run -d --name beacon \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  -p 8000:8000 \
-  beacon:latest
-```
+## 📄 License
 
-### Run with Docker Compose
-
-```bash
-docker compose -f docker-compose.yml up --build -d
-```
-
-Build and run in development mode (hot-reload, source mounted):
-
-```bash
-docker compose -f docker-compose.dev.yml up --build
-```
-
-Both compose files mount `/var/run/docker.sock` into the container so Beacon can talk to the host's Docker daemon.
-
-## Testing & CI
-
-```bash
-just test
-# or
-cargo test -p beacon
-```
-
-GitHub Actions (`.github/workflows/rust.yml`) builds and tests the Rust workspace on every push and pull request to `main`.
-
-## License
-
-See [LICENSE](./LICENSE).
+This project is licensed under the [MIT License](./LICENSE).
