@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: beacon:latest
+    image: ssshashank/beacon:latest
     container_name: beacon
     ports:
       - "8000:8000"

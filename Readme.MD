@@ -39,7 +39,7 @@ docker run -d \
   --name beacon \
   -p 8000:8000 \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  beacon:latest
+  ssshashank/beacon:latest
 ```
 
 Open **[http://localhost:8000](http://localhost:8000)** in your browser to access the management dashboard.
