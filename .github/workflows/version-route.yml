@@ -3,8 +3,8 @@ name: Route v2 Features to _v0.2.0
 on:
   push:
     branches:
-      - 'feat:/v2-*'
-      - 'fix:/v2-*'
+      - 'feat/v2-*'
+      - 'fix/v2-*'
 
 permissions:
   contents: write
@@ -19,19 +19,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Extract Target Version Branch
-        id: target
-        run: |
-          BRANCH="${GITHUB_REF#refs/heads/}"
-          # Example: feat/v2-stats-stream -> v2
-          TARGET_BRANCH=$(echo "$BRANCH" | sed -E 's#^(feat|fix)/(v[0-9]+)-.*#\2#')
-          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
-          echo "target=$TARGET_BRANCH" >> $GITHUB_OUTPUT
-          echo "Target branch detected: $TARGET_BRANCH"
+      - name: Setup Rust & Bun
+        uses: dtolnay/rust-toolchain@stable
+      - uses: oven-sh/setup-bun@v2
+
       - name: Verify Target Branch Exists
         run: |
-          if ! git show-ref --verify --quiet "refs/remotes/origin/${{ steps.target.outputs.target }}"; then
-            echo "Error: Target branch '${{ steps.target.outputs.target }}' does not exist!"
+          if ! git show-ref --verify --quiet "refs/remotes/origin/_v0.2.0"; then
+            echo "Error: Target branch '_v0.2.0' does not exist on origin!"
             exit 1
           fi
 
@@ -40,22 +35,26 @@ jobs:
           cargo check --all-targets
           cargo test
 
-      - name: Create & Auto-Merge PR to Target Version
+      - name: Run Bun Install & Build
+        run: |
+          bun install --frozen-lockfile
+          bun run build
+
+      - name: Create & Auto-Merge PR into _v0.2.0
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          SOURCE="${{ steps.target.outputs.branch }}"
-          TARGET="${{ steps.target.outputs.target }}"
+          SOURCE_BRANCH="${GITHUB_REF#refs/heads/}"
+          TARGET_BRANCH="_v0.2.0"
 
-          # Check if PR already exists
-          EXISTING_PR=$(gh pr list --head "$SOURCE" --base "$TARGET" --json number -q '.[0].number')
+          EXISTING_PR=$(gh pr list --head "$SOURCE_BRANCH" --base "$TARGET_BRANCH" --json number -q '.[0].number')
 
           if [ -z "$EXISTING_PR" ]; then
             PR_URL=$(gh pr create \
-              --base "$TARGET" \
-              --head "$SOURCE" \
-              --title "chore($TARGET): merge $SOURCE" \
-              --body "Automated merge after CI checks passed.")
+              --base "$TARGET_BRANCH" \
+              --head "$SOURCE_BRANCH" \
+              --title "feat(_v0.2.0): merge $SOURCE_BRANCH" \
+              --body "Automated merge into _v0.2.0 after Rust and Bun CI checks passed.")
             gh pr merge "$PR_URL" --squash --delete-branch
           else
             gh pr merge "$EXISTING_PR" --squash --delete-branch
