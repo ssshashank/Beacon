@@ -5,8 +5,32 @@ import { TagsIcon } from "../../../global/components/_icons/tag";
 import { truncateLabel } from "../mapper";
 import { PortsIcon } from "../../../global/components/_icons/ports";
 import { EjectIcon } from "../../../global/components/_icons/eject";
+import Copyable from "../../../global/components/_common/copyable";
 
 function ContainerAbout(props: any) {
+  const aboutRows = [
+    {
+      label: "Name:",
+      value: () => props.container()?.name,
+    },
+    {
+      label: "ID:",
+      value: () => props.container()?.id,
+      display: () => `\u200E${props.container()?.id}`,
+      textClass: "truncate [direction:rtl] text-left max-w-[150px]",
+    },
+    {
+      label: "Image:",
+      value: () => props.container()?.image?.name,
+      display: () => truncateLabel("image", props.container()?.image?.name as string),
+    },
+    {
+      label: "Command:",
+      value: () => props.container()?.command,
+      textClass: "truncate max-w-[200px]",
+    },
+  ];
+
   return (
     <div class='h-fit rounded bg-[#151619] p-3 min-w-0'>
       <div class='flex items-center justify-start gap-3 border-b-[0.03px] pb-3 border-neutral-700'>
@@ -14,38 +38,18 @@ function ContainerAbout(props: any) {
         <span class='text-md font-medium'>About</span>
       </div>
       <div class="text-gray-200 pt-2">
-        <div class='flex items-center justify-between py-1'>
-          <span class='text-gray-400'>
-            Name:
-          </span>
-          <span title={props.container()?.name}>
-            {props.container()?.name}
-          </span>
-        </div>
-        <div class='flex items-center justify-between py-1'>
-          <span class='text-gray-400'>
-            ID:
-          </span>
-          <span class="truncate [direction:rtl] text-left max-w-[150px]" title={props.container()?.id}>
-            &lrm;{props.container()?.id}
-          </span>
-        </div>
-        <div class='flex items-center justify-between py-1'>
-          <span class='text-gray-400'>
-            Image:
-          </span>
-          <span title={props.container()?.image?.name}>
-            {truncateLabel("image", props.container()?.image?.name as string)}
-          </span>
-        </div>
-        <div class='flex items-center justify-between py-1'>
-          <span class='text-gray-400'>
-            Command:
-          </span>
-          <span class="truncate max-w-[200px]" title={props.container()?.command}>
-            {props.container()?.command}
-          </span>
-        </div>
+        <For each={aboutRows}>
+          {(row) => (
+            <div class='flex items-center justify-between py-1 group'>
+              <span class='text-gray-400'>{row.label}</span>
+              <Copyable
+                value={row.value()}
+                display={row.display?.()}
+                textClass={row.textClass}
+              />
+            </div>
+          )}
+        </For>
         <div class='flex items-center justify-between py-1'>
           <span class='text-gray-400'>
             State:
@@ -80,21 +84,24 @@ function ContainerLabels(props: any) {
       <div class="text-gray-200 pt-2">
         <Show
           when={Object.keys(props.container()?.label ?? {}).length > 0}
-          fallback={<p class="text-neutral-500 py-2 text-center">No labels found</p>}
-        >
+          fallback={<p class="text-neutral-500 py-2 text-center">No labels found</p>}>
           <div class='grid grid-cols-2 gap-4 py-1 text-gray-400 font-medium'>
             <span>Key</span>
             <span class="text-right">Value</span>
           </div>
           <For each={Object.entries(props.container()?.label ?? {})}>
             {([key, value]) => (
-              <div class='grid grid-cols-2 gap-4 py-1'>
-                <span class='text-gray-400 break-all' title={key}>
-                  {key}
-                </span>
-                <span class='text-right truncate' title={value as string}>
-                  {truncateLabel(key, value as string)}
-                </span>
+              <div class='grid grid-cols-2 gap-4 py-1 items-center'>
+                <Copyable
+                  value={key}
+                  textClass='text-gray-400 break-all'
+                />
+                <Copyable
+                  value={value as string}
+                  display={truncateLabel(key, value as string)}
+                  align="right"
+                  textClass='text-right truncate'
+                />
               </div>
             )}
           </For>
@@ -151,8 +158,7 @@ function ContainerPortForward(props: any) {
       <div class="text-gray-200 pt-2">
         <Show
           when={ports().length > 0}
-          fallback={<p class="text-neutral-500 py-2 text-center">No port forwards found</p>}
-        >
+          fallback={<p class="text-neutral-500 py-2 text-center">No port forwards found</p>}>
           <div class='grid grid-cols-3 gap-2 py-1 text-gray-400 font-medium'>
             <span>Host Port</span>
             <span class="text-center">ContainerPort</span>
@@ -204,8 +210,7 @@ function ContainerMount(props: any) {
       <div class="text-gray-200 pt-2">
         <Show
           when={mounts().length > 0}
-          fallback={<p class="text-neutral-500 py-2 text-center">No mounts found</p>}
-        >
+          fallback={<p class="text-neutral-500 py-2 text-center">No mounts found</p>}>
           <div class='grid grid-cols-2 gap-4 py-1 text-gray-400 font-medium'>
             <span>Source</span>
             <span class="text-right">Destination</span>
@@ -213,12 +218,15 @@ function ContainerMount(props: any) {
           <For each={mounts()}>
             {(mount) => (
               <div class='grid grid-cols-2 gap-4 py-1 items-center'>
-                <span class='text-blue-400 truncate' title={mount.source}>
-                  {mount.source}
-                </span>
-                <span class='text-right truncate text-gray-300' title={mount.destination}>
-                  {mount.destination}
-                </span>
+                <Copyable
+                  value={mount.source}
+                  textClass='text-blue-400 truncate'
+                />
+                <Copyable
+                  value={mount.destination}
+                  align="right"
+                  textClass='text-right truncate text-gray-300'
+                />
               </div>
             )}
           </For>

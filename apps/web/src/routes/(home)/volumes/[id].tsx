@@ -7,6 +7,7 @@ import { CopyIcon } from "../../../global/components/_icons/copy";
 import { TrashIcon } from "../../../global/components/_icons/trash";
 import { inspectVolumeByNameQuery } from "../../../modules/volumes/queries";
 import { createBGColorGenerator } from "../../../global/reactivity/createBgColor";
+import { createClipboard } from "../../../global/reactivity/createClipboard";
 import { ContainerStatus } from "../../../modules/containers/constant";
 import { listContainersQuery } from "../../../modules/containers/queries";
 import VolumesAPI from "../../../modules/volumes/api";
@@ -17,7 +18,7 @@ export default function VolumeByNameScreen() {
   const params = useParams();
   const location: any = useLocation();
   const navigate = useNavigate();
-  const [copied, setCopied] = createSignal(false);
+  const { copy, copied } = createClipboard();
   const [deleting, setDeleting] = createSignal(false);
 
   const decodedName = createMemo(() => decodeURIComponent(params?.id ?? ""));
@@ -65,17 +66,7 @@ export default function VolumeByNameScreen() {
     return false;
   });
 
-  const handleCopyMountpoint = async () => {
-    const textToCopy = mountpoint() || volumeName();
-    if (!textToCopy) return;
-    try {
-      await navigator.clipboard.writeText(textToCopy);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy:", err);
-    }
-  };
+  const handleCopyMountpoint = () => copy(mountpoint() || volumeName());
 
   const handleDelete = async () => {
     const name = volumeName();

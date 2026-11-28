@@ -7,6 +7,7 @@ import Tooltip from "../../../global/components/_common/tooltip";
 import { inspectContainerByIDQuery } from "../../../modules/containers/queries";
 import { ContainerStatus } from "../../../modules/containers/constant";
 import ContainerNotFound from "../../../modules/containers/components/notFound";
+import { createClipboard } from "../../../global/reactivity/createClipboard";
 
 // Lazy initialization
 const LazyContainerInfo = lazy(() => import("../../../modules/containers/components/containerInfo"));
@@ -19,6 +20,7 @@ export default function ContainerByIDScreen() {
   const params = useParams();
   const location: any = useLocation();
   const container = createMemo(() => inspectContainerByIDQuery(params?.id ?? ""));
+  const { copy, copied } = createClipboard();
 
   return (
     <main class='w-full h-full p-2 flex flex-col'>
@@ -34,11 +36,14 @@ export default function ContainerByIDScreen() {
               <span class="text-gray-500">
                 {container()?.image?.name}
               </span>
-              <div class='flex items-center justify-start gap-3 cursor-pointer'>
+              <div
+                class='flex items-center justify-start gap-3 cursor-pointer'
+                onClick={() => copy(container()?.id)}
+              >
                 <span class='text-xs text-gray-600'>
                   {container()?.id}
                 </span>
-                <Tooltip as="span" title="copy">
+                <Tooltip as="span" title={copied() ? "copied" : "copy"}>
                   <CopyIcon size={16} color="gray" />
                 </Tooltip>
               </div>
