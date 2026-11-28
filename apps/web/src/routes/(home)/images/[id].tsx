@@ -7,6 +7,7 @@ import { CopyIcon } from "../../../global/components/_icons/copy";
 import { ExportIcon } from "../../../global/components/_icons/export";
 import { inspectImageByIDQuery } from "../../../modules/images/queries";
 import { createBGColorGenerator } from "../../../global/reactivity/createBgColor";
+import { createClipboard } from "../../../global/reactivity/createClipboard";
 import { ContainerStatus } from "../../../modules/containers/constant";
 import { listContainersQuery } from "../../../modules/containers/queries";
 import ImagesAPI from "../../../modules/images/api";
@@ -17,7 +18,7 @@ const LazyImageHistory = lazy(() => import("../../../modules/images/components/i
 export default function ImageByIDScreen() {
   const params = useParams();
   const location: any = useLocation();
-  const [copied, setCopied] = createSignal(false);
+  const { copy, copied } = createClipboard();
   const [exporting, setExporting] = createSignal(false);
 
   const decodedId = createMemo(() => decodeURIComponent(params?.id ?? ""));
@@ -48,17 +49,7 @@ export default function ImageByIDScreen() {
 
   const containers = createMemo(() => listContainersQuery() ?? []);
 
-  const handleCopyId = async () => {
-    const textToCopy = fullId();
-    if (!textToCopy) return;
-    try {
-      await navigator.clipboard.writeText(textToCopy);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy:", err);
-    }
-  };
+  const handleCopyId = () => copy(fullId());
 
   const handleExport = async () => {
     const id = decodedId();

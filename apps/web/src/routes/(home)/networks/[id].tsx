@@ -7,6 +7,7 @@ import { CopyIcon } from "../../../global/components/_icons/copy";
 import { TrashIcon } from "../../../global/components/_icons/trash";
 import { inspectNetworkByIDQuery } from "../../../modules/networks/queries";
 import { createBGColorGenerator } from "../../../global/reactivity/createBgColor";
+import { createClipboard } from "../../../global/reactivity/createClipboard";
 import { ContainerStatus } from "../../../modules/containers/constant";
 import NetworksAPI from "../../../modules/networks/api";
 
@@ -16,7 +17,7 @@ export default function NetworkByIDScreen() {
   const params = useParams();
   const location: any = useLocation();
   const navigate = useNavigate();
-  const [copied, setCopied] = createSignal(false);
+  const { copy, copied } = createClipboard();
   const [deleting, setDeleting] = createSignal(false);
 
   const decodedId = createMemo(() => decodeURIComponent(params?.id ?? ""));
@@ -45,17 +46,7 @@ export default function NetworkByIDScreen() {
     return Object.keys(containersObj).length > 0;
   });
 
-  const handleCopyId = async () => {
-    const textToCopy = fullId();
-    if (!textToCopy) return;
-    try {
-      await navigator.clipboard.writeText(textToCopy);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy:", err);
-    }
-  };
+  const handleCopyId = () => copy(fullId());
 
   const handleDelete = async () => {
     const id = fullId();
