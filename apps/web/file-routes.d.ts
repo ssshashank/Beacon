@@ -39,6 +39,12 @@ declare module "virtual:file-routes" {
       $$route?: undefined;
     },
     {
+      path: "/(home)";
+      page: true;
+      $component: FileRouteLazyRef<typeof import("./src/routes/index")>;
+      $$route?: undefined;
+    },
+    {
       path: "/*404";
       page: true;
       $component: FileRouteLazyRef<typeof import("./src/routes/[...404]")>;
@@ -51,27 +57,15 @@ declare module "virtual:file-routes" {
       $$route?: undefined;
     },
     {
-      path: "/(home)/networks/";
-      page: true;
-      $component: FileRouteLazyRef<typeof import("./src/routes/(home)/networks/index")>;
-      $$route?: undefined;
-    },
-    {
-      path: "/(home)/containers/";
-      page: true;
-      $component: FileRouteLazyRef<typeof import("./src/routes/(home)/containers/index")>;
-      $$route?: undefined;
-    },
-    {
       path: "/(home)/volumes/";
       page: true;
       $component: FileRouteLazyRef<typeof import("./src/routes/(home)/volumes/index")>;
       $$route?: undefined;
     },
     {
-      path: "/(home)";
+      path: "/(home)/networks/";
       page: true;
-      $component: FileRouteLazyRef<typeof import("./src/routes/(home)")>;
+      $component: FileRouteLazyRef<typeof import("./src/routes/(home)/networks/index")>;
       $$route?: undefined;
     },
     {
@@ -81,15 +75,21 @@ declare module "virtual:file-routes" {
       $$route?: undefined;
     },
     {
-      path: "/(home)/images/:id";
+      path: "/(home)/containers/";
       page: true;
-      $component: FileRouteLazyRef<typeof import("./src/routes/(home)/images/[id]")>;
+      $component: FileRouteLazyRef<typeof import("./src/routes/(home)/containers/index")>;
       $$route?: undefined;
     },
     {
       path: "/(home)/containers/:id";
       page: true;
       $component: FileRouteLazyRef<typeof import("./src/routes/(home)/containers/[id]")>;
+      $$route?: undefined;
+    },
+    {
+      path: "/(home)/volumes/:id";
+      page: true;
+      $component: FileRouteLazyRef<typeof import("./src/routes/(home)/volumes/[id]")>;
       $$route?: undefined;
     },
     {

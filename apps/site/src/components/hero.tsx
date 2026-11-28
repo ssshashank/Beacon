@@ -2,7 +2,7 @@ import { createSignal } from 'solid-js';
 import HeroDemo from './heroDemo';
 import { ATMOSPHERIC_GRADIENTS, STIPPLE_NOISE_SVG } from './patterns';
 
-const DOCKER_COMMAND = 'docker run -d --name beacon -p 8000:8000 -v /var/run/docker.sock:/var/run/docker.sock beacon:latest';
+const DOCKER_COMMAND = 'docker run -d --name beacon -p 8000:8000 -v /var/run/docker.sock:/var/run/docker.sock ssshashank/beacon:latest';
 
 export default function Hero() {
   const [mode, setMode] = createSignal<'containers' | 'logs'>('containers');

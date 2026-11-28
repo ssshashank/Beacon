@@ -9,10 +9,10 @@ export default function QuickStart() {
   --name beacon \\
   -v /var/run/docker.sock:/var/run/docker.sock \\
   -p 8000:8000 \\
-  beacon:latest`,
+  ssshashank/beacon:latest`,
     compose: `services:
   beacon:
-    image: beacon:latest
+    image: ssshashank/beacon:latest
     container_name: beacon
     ports:
       - "8000:8000"
