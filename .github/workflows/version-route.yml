@@ -38,6 +38,7 @@ jobs:
       - name: Run Bun Install & Build
         run: |
           bun install --frozen-lockfile
+          cd apps/web
           bun run build
 
       - name: Create & Auto-Merge PR into _v0.2.0
