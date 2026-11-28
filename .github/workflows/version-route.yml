@@ -1,0 +1,62 @@
+name: Route v2 Features to _v0.2.0
+
+on:
+  push:
+    branches:
+      - 'feat/v2-*'
+      - 'fix/v2-*'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  test-and-route:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Rust & Bun
+        uses: dtolnay/rust-toolchain@stable
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Verify Target Branch Exists
+        run: |
+          if ! git show-ref --verify --quiet "refs/remotes/origin/_v0.2.0"; then
+            echo "Error: Target branch '_v0.2.0' does not exist on origin!"
+            exit 1
+          fi
+
+      - name: Run Rust Checks & Tests
+        run: |
+          cargo check --all-targets
+          cargo test
+
+      - name: Run Bun Install & Build
+        run: |
+          bun install --frozen-lockfile
+          cd apps/web
+          bun run build
+
+      - name: Create & Auto-Merge PR into _v0.2.0
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          SOURCE_BRANCH="${GITHUB_REF#refs/heads/}"
+          TARGET_BRANCH="_v0.2.0"
+
+          EXISTING_PR=$(gh pr list --head "$SOURCE_BRANCH" --base "$TARGET_BRANCH" --json number -q '.[0].number')
+
+          if [ -z "$EXISTING_PR" ]; then
+            PR_URL=$(gh pr create \
+              --base "$TARGET_BRANCH" \
+              --head "$SOURCE_BRANCH" \
+              --title "feat(_v0.2.0): merge $SOURCE_BRANCH" \
+              --body "Automated merge into _v0.2.0 after Rust and Bun CI checks passed.")
+            gh pr merge "$PR_URL" --squash --delete-branch
+          else
+            gh pr merge "$EXISTING_PR" --squash --delete-branch
+          fi
