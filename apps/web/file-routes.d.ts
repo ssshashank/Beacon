@@ -41,7 +41,7 @@ declare module "virtual:file-routes" {
     {
       path: "/(home)";
       page: true;
-      $component: FileRouteLazyRef<typeof import("./src/routes/index")>;
+      $component: FileRouteLazyRef<typeof import("./src/routes/(home)")>;
       $$route?: undefined;
     },
     {
@@ -57,9 +57,9 @@ declare module "virtual:file-routes" {
       $$route?: undefined;
     },
     {
-      path: "/(home)/volumes/";
+      path: "/(home)/images/:id";
       page: true;
-      $component: FileRouteLazyRef<typeof import("./src/routes/(home)/volumes/index")>;
+      $component: FileRouteLazyRef<typeof import("./src/routes/(home)/images/[id]")>;
       $$route?: undefined;
     },
     {
@@ -87,9 +87,9 @@ declare module "virtual:file-routes" {
       $$route?: undefined;
     },
     {
-      path: "/(home)/volumes/:id";
+      path: "/(home)/volumes/";
       page: true;
-      $component: FileRouteLazyRef<typeof import("./src/routes/(home)/volumes/[id]")>;
+      $component: FileRouteLazyRef<typeof import("./src/routes/(home)/volumes/index")>;
       $$route?: undefined;
     },
     {
