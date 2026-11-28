@@ -56,7 +56,7 @@ jobs:
               --head "$SOURCE_BRANCH" \
               --title "feat(_v0.2.0): merge $SOURCE_BRANCH" \
               --body "Automated merge into _v0.2.0 after Rust and Bun CI checks passed.")
-            gh pr merge "$PR_URL" --squash --delete-branch
+            gh pr merge "$PR_URL" --squash
           else
-            gh pr merge "$EXISTING_PR" --squash --delete-branch
+            gh pr merge "$EXISTING_PR" --squash
           fi
